@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { UserPlus, Copy, Check, Mail, Trash2, X, Clock } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { UserPlus, Copy, Check, Mail, Trash2 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid'; // Vous devrez peut-être installer uuid: npm install uuid @types/uuid
 import { useMockAuth } from '../contexts/MockAuthContext';
 
@@ -15,103 +15,7 @@ interface Profile {
   created_at: string;
 }
 
-// Composant pour la popup d'alerte des jours d'essai
-function TrialReminderPopup({ daysLeft, onClose }: { daysLeft: number, onClose: () => void }) {
-  // État pour gérer l'animation de fermeture
-  const [isClosing, setIsClosing] = useState(false);
-  // Référence pour stocker l'ID du timeout
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
-  // Nettoyage des timeouts lors du démontage
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
-  
-  // Fonction pour gérer la fermeture avec animation
-  const handleClose = () => {
-    setIsClosing(true);
-    
-    // Nettoyer tout timeout existant avant d'en créer un nouveau
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    
-    // Attendre la fin de l'animation avant de fermer réellement
-    timeoutRef.current = setTimeout(onClose, 300);
-  };
-  
-  // Plus besoin d'effet pour manipuler directement le DOM
-  // Le composant parent contrôlera le flou via les props
-  
-  return (
-    <div 
-      className={`fixed inset-0 z-50 flex items-center justify-center p-4
-        transition-opacity duration-300 ease-in-out 
-        ${isClosing ? 'opacity-0' : 'opacity-100'}`}
-    >
-      {/* Overlay avec effet de fondu */}
-      <div 
-        className={`absolute inset-0 bg-black transition-all duration-300 ease-in-out
-          ${isClosing ? 'bg-opacity-0' : 'bg-opacity-60'}`} 
-        onClick={handleClose}
-      ></div>
-      
-      {/* Contenu de la popup avec animation */}
-      <div 
-        className={`bg-white rounded-xl shadow-lg max-w-md w-full p-6 relative
-          transform transition-all duration-300 ease-in-out
-          ${isClosing ? 'scale-95 opacity-0' : 'scale-100 opacity-100'}
-          motion-reduce:transition-none motion-reduce:transform-none`}
-      >
-        <button 
-          onClick={handleClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors"
-        >
-          <X className="h-5 w-5" />
-        </button>
-        
-        <div className="flex items-center gap-3 mb-4">
-          <div className="bg-orange-100 p-2 rounded-full">
-            <Clock className="h-6 w-6 text-orange-600" />
-          </div>
-          <h2 className="text-xl font-semibold text-orange-900">Période d'essai en cours</h2>
-        </div>
-        
-        <p className="text-gray-600 mb-4">
-          Il vous reste <span className="font-semibold text-orange-600">{daysLeft} jours</span> dans votre période d'essai gratuite.
-        </p>
-        
-        {daysLeft <= 5 && (
-          <p className="text-orange-600 mb-4 animate-pulse">
-            Votre période d'essai se termine bientôt ! Pour continuer à utiliser toutes les fonctionnalités, passez à un forfait payant.
-          </p>
-        )}
-        
-        <div className="mt-6 flex justify-end gap-3">
-          <button 
-            onClick={handleClose}
-            className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-gray-800 transition-colors"
-          >
-            Fermer
-          </button>
-          <button 
-            className="px-4 py-2 bg-orange-600 hover:bg-orange-700 rounded-lg text-white transition-colors"
-            onClick={() => {
-              alert('Redirection vers la page d\'abonnement');
-              handleClose();
-            }}
-          >
-            Voir les forfaits
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
+// La popup de rappel d'essai a été retirée de ce fichier : elle est gérée par le Dashboard
 
 // Nous utilisons maintenant le contexte d'authentification (useMockAuth)
 // au lieu d'un objet mockCurrentUser directement
@@ -152,15 +56,13 @@ const mockUsers: Profile[] = [
 
 export default function UserManagement() {
   // Utiliser notre contexte d'authentification mocké
-  const { profile, company } = useMockAuth();
+  const { profile } = useMockAuth();
   
   const [users, setUsers] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [invitationLink, setInvitationLink] = useState('');
   const [showInvitation, setShowInvitation] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [showTrialReminder, setShowTrialReminder] = useState(false);
-  const [trialDaysLeft, setTrialDaysLeft] = useState(0);
 
   useEffect(() => {
     // Simuler un chargement des données
@@ -172,20 +74,8 @@ export default function UserManagement() {
     return () => clearTimeout(timer);
   }, []);
   
-  // Vérifier les jours d'essai restants et afficher la popup
-  useEffect(() => {
-    if (company && company.trial_end_date) {
-      const trialEndDate = new Date(company.trial_end_date);
-      const today = new Date();
-      const differenceInTime = trialEndDate.getTime() - today.getTime();
-      const differenceInDays = Math.ceil(differenceInTime / (1000 * 3600 * 24));
-      
-      setTrialDaysLeft(differenceInDays);
-      
-      // Afficher la popup au chargement de la page de gestion des utilisateurs
-      setShowTrialReminder(true);
-    }
-  }, [company]);
+  // Note: la popup de rappel d'essai est gérée globalement (Dashboard);
+  // ce composant n'affiche plus la popup localement.
 
   const createInvitation = async () => {
     // Simuler la création d'un lien d'invitation
@@ -221,13 +111,8 @@ export default function UserManagement() {
   }
 
   return (
-    <div id="main-content" className={`transition-all duration-300 ${showTrialReminder ? 'backdrop-blur-sm' : ''}`}>
-      {showTrialReminder && company && (
-        <TrialReminderPopup 
-          daysLeft={trialDaysLeft} 
-          onClose={() => setShowTrialReminder(false)} 
-        />
-      )}
+    <div id="main-content" className="transition-all duration-300">
+      {/* La popup d'essai a été retirée de cette vue; elle est gérée par le Dashboard global */}
       
       <div className="flex justify-between items-center mb-6">
         <div>

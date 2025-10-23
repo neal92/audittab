@@ -99,25 +99,44 @@ export default function Dashboard() {
 
       <main className="flex-1 overflow-auto">
         {showTrialNotice && daysRemaining > 0 && (
-          <div className="bg-gradient-to-r from-orange-50 to-orange-50 border-b border-orange-200">
+          <div className="bg-gradient-to-r from-orange-50 to-orange-100 border-b border-orange-200 shadow-sm">
             <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Gift className="h-6 w-6 text-orange-600" />
+              <div className="flex items-center gap-4">
+                <div className="bg-orange-100 p-2 rounded-full flex-shrink-0">
+                  <Gift className="h-6 w-6 text-orange-600" />
+                </div>
                 <div>
                   <p className="text-orange-900 font-semibold">
                     Essai gratuit de 15 jours
                   </p>
                   <p className="text-orange-700 text-sm">
-                    Il vous reste {daysRemaining} jour{daysRemaining > 1 ? 's' : ''} pour profiter de toutes les fonctionnalités
+                    {daysRemaining < 6 ? (
+                      <span className="font-medium text-orange-700">
+                        Plus que {daysRemaining} jour{daysRemaining > 1 ? 's' : ''}! 
+                      </span>
+                    ) : (
+                      <span>
+                        Il vous reste {daysRemaining} jour{daysRemaining > 1 ? 's' : ''}
+                      </span>
+                    )}
+                    {' '}pour profiter de toutes les fonctionnalités
                   </p>
                 </div>
               </div>
-              <button
-                onClick={() => setShowTrialNotice(false)}
-                className="text-orange-600 hover:text-blue-800 font-medium text-sm"
-              >
-                Fermer
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => alert("Redirection vers la page d'abonnement")}
+                  className="bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors"
+                >
+                  Passer à un abonnement
+                </button>
+                <button
+                  onClick={() => setShowTrialNotice(false)}
+                  className="text-orange-600 hover:text-orange-800 font-medium text-sm"
+                >
+                  Fermer
+                </button>
+              </div>
             </div>
           </div>
         )}

@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { CheckSquare, XSquare, Plus, Trash2, X, Clock } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { CheckSquare, XSquare, Plus, Trash2 } from 'lucide-react';
 import { FormTemplate, AuditRecord, Project } from '../lib/types';
 import { useMockAuth } from '../contexts/MockAuthContext';
 import { v4 as uuidv4 } from 'uuid';
@@ -80,106 +80,10 @@ const MOCK_RECORDS: AuditRecord[] = [
   }
 ];
 
-// Composant pour la popup d'alerte des jours d'essai
-function TrialReminderPopup({ daysLeft, onClose }: { daysLeft: number, onClose: () => void }) {
-  // État pour gérer l'animation de fermeture
-  const [isClosing, setIsClosing] = useState(false);
-  // Référence pour stocker l'ID du timeout
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
-  // Nettoyage des timeouts lors du démontage
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
-  
-  // Fonction pour gérer la fermeture avec animation
-  const handleClose = () => {
-    setIsClosing(true);
-    
-    // Nettoyer tout timeout existant avant d'en créer un nouveau
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    
-    // Attendre la fin de l'animation avant de fermer réellement
-    timeoutRef.current = setTimeout(onClose, 300);
-  };
-  
-  // Plus besoin d'effet pour manipuler directement le DOM
-  // Le composant parent contrôlera le flou via les props
-  
-  return (
-    <div 
-      className={`fixed inset-0 z-50 flex items-center justify-center p-4
-        transition-opacity duration-300 ease-in-out 
-        ${isClosing ? 'opacity-0' : 'opacity-100'}`}
-    >
-      {/* Overlay avec effet de fondu */}
-      <div 
-        className={`absolute inset-0 bg-black transition-all duration-300 ease-in-out
-          ${isClosing ? 'bg-opacity-0' : 'bg-opacity-60'}`} 
-        onClick={handleClose}
-      ></div>
-      
-      {/* Contenu de la popup avec animation */}
-      <div 
-        className={`bg-white rounded-xl shadow-lg max-w-md w-full p-6 relative
-          transform transition-all duration-300 ease-in-out
-          ${isClosing ? 'scale-95 opacity-0' : 'scale-100 opacity-100'}
-          motion-reduce:transition-none motion-reduce:transform-none`}
-      >
-        <button 
-          onClick={handleClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors"
-        >
-          <X className="h-5 w-5" />
-        </button>
-        
-        <div className="flex items-center gap-3 mb-4">
-          <div className="bg-orange-100 p-2 rounded-full">
-            <Clock className="h-6 w-6 text-orange-600" />
-          </div>
-          <h2 className="text-xl font-semibold text-orange-900">Période d'essai en cours</h2>
-        </div>
-        
-        <p className="text-gray-600 mb-4">
-          Il vous reste <span className="font-semibold text-orange-600">{daysLeft} jours</span> dans votre période d'essai gratuite.
-        </p>
-        
-        {daysLeft <= 5 && (
-          <p className="text-orange-600 mb-4 animate-pulse">
-            Votre période d'essai se termine bientôt ! Pour continuer à utiliser toutes les fonctionnalités, passez à un forfait payant.
-          </p>
-        )}
-        
-        <div className="mt-6 flex justify-end gap-3">
-          <button 
-            onClick={handleClose}
-            className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-gray-800 transition-colors"
-          >
-            Fermer
-          </button>
-          <button 
-            className="px-4 py-2 bg-orange-600 hover:bg-orange-700 rounded-lg text-white transition-colors"
-            onClick={() => {
-              alert('Redirection vers la page d\'abonnement');
-              handleClose();
-            }}
-          >
-            Voir les forfaits
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
+// Le composant TrialReminderPopup a été déplacé vers le composant UserManagement.tsx
 
 export default function AuditRecordCreator() {
-  const { profile, company } = useMockAuth();
+  const { profile } = useMockAuth();
   const [templates, setTemplates] = useState<FormTemplate[]>([]);
   const [projects] = useState<Project[]>(MOCK_PROJECTS);
   const [records, setRecords] = useState<AuditRecord[]>([]);
@@ -187,23 +91,9 @@ export default function AuditRecordCreator() {
   const [selectedTemplate, setSelectedTemplate] = useState<FormTemplate | null>(null);
   const [selectedProject, setSelectedProject] = useState<string>('');
   const [formData, setFormData] = useState<Record<string, any>>({});
-  const [showTrialReminder, setShowTrialReminder] = useState(false);
-  const [trialDaysLeft, setTrialDaysLeft] = useState(0);
   
-  // Vérifier les jours d'essai restants et afficher la popup
-  useEffect(() => {
-    if (company && company.trial_end_date) {
-      const trialEndDate = new Date(company.trial_end_date);
-      const today = new Date();
-      const differenceInTime = trialEndDate.getTime() - today.getTime();
-      const differenceInDays = Math.ceil(differenceInTime / (1000 * 3600 * 24));
-      
-      setTrialDaysLeft(differenceInDays);
-      
-      // Toujours afficher la popup au chargement de la page
-      setShowTrialReminder(true);
-    }
-  }, [company]);
+  // On n'affiche plus la popup de délai d'essai dans le composant AuditRecordCreator
+  // Elle est maintenant gérée par le Dashboard et UserManagement
   
   // Charger les templates et les records depuis localStorage
   useEffect(() => {
@@ -669,15 +559,9 @@ export default function AuditRecordCreator() {
 
   return (
     <div className="container mx-auto p-6">
-      {/* Popup de rappel d'essai */}
-      {showTrialReminder && (
-        <TrialReminderPopup 
-          daysLeft={trialDaysLeft} 
-          onClose={() => setShowTrialReminder(false)} 
-        />
-      )}
+      {/* La popup de rappel d'essai a été déplacée vers le Dashboard et UserManagement */}
     
-      <div id="main-content" className={`transition-all duration-300 ${showTrialReminder ? 'backdrop-blur-sm' : ''}`}>
+      <div id="main-content" className="transition-all duration-300">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-bold text-slate-900">Fiches d'audit</h1>
           {!showCreator && (
