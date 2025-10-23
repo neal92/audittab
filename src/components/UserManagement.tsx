@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
-import { UserPlus, Copy, Check, Mail, Trash2 } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { UserPlus, Copy, Check, Mail, Trash2, X, Clock } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid'; // Vous devrez peut-être installer uuid: npm install uuid @types/uuid
+import { useMockAuth } from '../contexts/MockAuthContext';
 
 // Interface pour les données des utilisateurs (version frontend uniquement)
 interface Profile {
@@ -14,16 +15,106 @@ interface Profile {
   created_at: string;
 }
 
-// Données mockées pour un utilisateur connecté
-const mockCurrentUser = {
-  id: "current-user-id",
-  company_id: "mock-company-id",
-  first_name: "John",
-  last_name: "Doe",
-  email: "john.doe@example.com",
-  role: "admin",
-  created_at: new Date().toISOString()
-};
+// Composant pour la popup d'alerte des jours d'essai
+function TrialReminderPopup({ daysLeft, onClose }: { daysLeft: number, onClose: () => void }) {
+  // État pour gérer l'animation de fermeture
+  const [isClosing, setIsClosing] = useState(false);
+  // Référence pour stocker l'ID du timeout
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Nettoyage des timeouts lors du démontage
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+  
+  // Fonction pour gérer la fermeture avec animation
+  const handleClose = () => {
+    setIsClosing(true);
+    
+    // Nettoyer tout timeout existant avant d'en créer un nouveau
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    
+    // Attendre la fin de l'animation avant de fermer réellement
+    timeoutRef.current = setTimeout(onClose, 300);
+  };
+  
+  // Plus besoin d'effet pour manipuler directement le DOM
+  // Le composant parent contrôlera le flou via les props
+  
+  return (
+    <div 
+      className={`fixed inset-0 z-50 flex items-center justify-center p-4
+        transition-opacity duration-300 ease-in-out 
+        ${isClosing ? 'opacity-0' : 'opacity-100'}`}
+    >
+      {/* Overlay avec effet de fondu */}
+      <div 
+        className={`absolute inset-0 bg-black transition-all duration-300 ease-in-out
+          ${isClosing ? 'bg-opacity-0' : 'bg-opacity-60'}`} 
+        onClick={handleClose}
+      ></div>
+      
+      {/* Contenu de la popup avec animation */}
+      <div 
+        className={`bg-white rounded-xl shadow-lg max-w-md w-full p-6 relative
+          transform transition-all duration-300 ease-in-out
+          ${isClosing ? 'scale-95 opacity-0' : 'scale-100 opacity-100'}
+          motion-reduce:transition-none motion-reduce:transform-none`}
+      >
+        <button 
+          onClick={handleClose}
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors"
+        >
+          <X className="h-5 w-5" />
+        </button>
+        
+        <div className="flex items-center gap-3 mb-4">
+          <div className="bg-orange-100 p-2 rounded-full">
+            <Clock className="h-6 w-6 text-orange-600" />
+          </div>
+          <h2 className="text-xl font-semibold text-orange-900">Période d'essai en cours</h2>
+        </div>
+        
+        <p className="text-gray-600 mb-4">
+          Il vous reste <span className="font-semibold text-orange-600">{daysLeft} jours</span> dans votre période d'essai gratuite.
+        </p>
+        
+        {daysLeft <= 5 && (
+          <p className="text-orange-600 mb-4 animate-pulse">
+            Votre période d'essai se termine bientôt ! Pour continuer à utiliser toutes les fonctionnalités, passez à un forfait payant.
+          </p>
+        )}
+        
+        <div className="mt-6 flex justify-end gap-3">
+          <button 
+            onClick={handleClose}
+            className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-gray-800 transition-colors"
+          >
+            Fermer
+          </button>
+          <button 
+            className="px-4 py-2 bg-orange-600 hover:bg-orange-700 rounded-lg text-white transition-colors"
+            onClick={() => {
+              alert('Redirection vers la page d\'abonnement');
+              handleClose();
+            }}
+          >
+            Voir les forfaits
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Nous utilisons maintenant le contexte d'authentification (useMockAuth)
+// au lieu d'un objet mockCurrentUser directement
 
 // Données mockées pour les utilisateurs
 const mockUsers: Profile[] = [
@@ -60,14 +151,16 @@ const mockUsers: Profile[] = [
 ];
 
 export default function UserManagement() {
-  // Utiliser le mock au lieu de useAuth
-  const profile = mockCurrentUser;
+  // Utiliser notre contexte d'authentification mocké
+  const { profile, company } = useMockAuth();
   
   const [users, setUsers] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [invitationLink, setInvitationLink] = useState('');
   const [showInvitation, setShowInvitation] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showTrialReminder, setShowTrialReminder] = useState(false);
+  const [trialDaysLeft, setTrialDaysLeft] = useState(0);
 
   useEffect(() => {
     // Simuler un chargement des données
@@ -78,6 +171,21 @@ export default function UserManagement() {
 
     return () => clearTimeout(timer);
   }, []);
+  
+  // Vérifier les jours d'essai restants et afficher la popup
+  useEffect(() => {
+    if (company && company.trial_end_date) {
+      const trialEndDate = new Date(company.trial_end_date);
+      const today = new Date();
+      const differenceInTime = trialEndDate.getTime() - today.getTime();
+      const differenceInDays = Math.ceil(differenceInTime / (1000 * 3600 * 24));
+      
+      setTrialDaysLeft(differenceInDays);
+      
+      // Afficher la popup au chargement de la page de gestion des utilisateurs
+      setShowTrialReminder(true);
+    }
+  }, [company]);
 
   const createInvitation = async () => {
     // Simuler la création d'un lien d'invitation
@@ -113,7 +221,14 @@ export default function UserManagement() {
   }
 
   return (
-    <div>
+    <div id="main-content" className={`transition-all duration-300 ${showTrialReminder ? 'backdrop-blur-sm' : ''}`}>
+      {showTrialReminder && company && (
+        <TrialReminderPopup 
+          daysLeft={trialDaysLeft} 
+          onClose={() => setShowTrialReminder(false)} 
+        />
+      )}
+      
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Gestion des utilisateurs</h1>
@@ -121,7 +236,7 @@ export default function UserManagement() {
         </div>
         <button
           onClick={createInvitation}
-          className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
         >
           <UserPlus className="h-5 w-5" />
           Inviter un utilisateur
@@ -129,11 +244,11 @@ export default function UserManagement() {
       </div>
 
       {showInvitation && (
-        <div className="mb-6 p-6 bg-green-50 border border-green-200 rounded-xl">
-          <h3 className="text-lg font-semibold text-green-900 mb-3">
+        <div className="mb-6 p-6 bg-orange-50 border border-orange-200 rounded-xl">
+          <h3 className="text-lg font-semibold text-orange-900 mb-3">
             Lien d'invitation créé
           </h3>
-          <p className="text-green-700 text-sm mb-4">
+          <p className="text-orange-700 text-sm mb-4">
             Partagez ce lien avec la personne que vous souhaitez inviter. Elle sera automatiquement ajoutée à votre entreprise et projet.
           </p>
           <div className="flex gap-2">
@@ -141,11 +256,11 @@ export default function UserManagement() {
               type="text"
               value={invitationLink}
               readOnly
-              className="flex-1 px-4 py-2 bg-white border border-green-300 rounded-lg text-sm"
+              className="flex-1 px-4 py-2 bg-white border border-orange-300 rounded-lg text-sm"
             />
             <button
               onClick={copyToClipboard}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
             >
               {copied ? (
                 <>
@@ -220,7 +335,7 @@ export default function UserManagement() {
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                     user.role === 'admin'
-                      ? 'bg-slate-100 text-slate-800'
+                      ? 'bg-orange-100 text-orange-800'
                       : 'bg-blue-100 text-blue-800'
                   }`}>
                     {user.role === 'admin' ? 'Administrateur' : 'Utilisateur'}

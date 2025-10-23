@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { CheckSquare, XSquare, Plus, Trash2, X, Clock } from 'lucide-react';
 import { FormTemplate, AuditRecord, Project } from '../lib/types';
 import { useMockAuth } from '../contexts/MockAuthContext';
@@ -84,28 +84,33 @@ const MOCK_RECORDS: AuditRecord[] = [
 function TrialReminderPopup({ daysLeft, onClose }: { daysLeft: number, onClose: () => void }) {
   // État pour gérer l'animation de fermeture
   const [isClosing, setIsClosing] = useState(false);
+  // Référence pour stocker l'ID du timeout
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Nettoyage des timeouts lors du démontage
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
   
   // Fonction pour gérer la fermeture avec animation
   const handleClose = () => {
     setIsClosing(true);
-    // Attendre la fin de l'animation avant de fermer réellement
-    setTimeout(onClose, 300);
-  };
-  
-  // Effet pour ajouter la classe de flou au contenu principal lors de l'affichage
-  useEffect(() => {
-    const mainContent = document.getElementById('main-content');
-    if (mainContent) {
-      mainContent.classList.add('backdrop-blur-sm', 'transition-all', 'duration-300');
+    
+    // Nettoyer tout timeout existant avant d'en créer un nouveau
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
     }
     
-    // Nettoyer lors de la fermeture
-    return () => {
-      if (mainContent) {
-        mainContent.classList.remove('backdrop-blur-sm', 'transition-all', 'duration-300');
-      }
-    };
-  }, []);
+    // Attendre la fin de l'animation avant de fermer réellement
+    timeoutRef.current = setTimeout(onClose, 300);
+  };
+  
+  // Plus besoin d'effet pour manipuler directement le DOM
+  // Le composant parent contrôlera le flou via les props
   
   return (
     <div 
@@ -672,13 +677,13 @@ export default function AuditRecordCreator() {
         />
       )}
     
-      <div id="main-content" className="transition-all duration-300">
+      <div id="main-content" className={`transition-all duration-300 ${showTrialReminder ? 'backdrop-blur-sm' : ''}`}>
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-bold text-slate-900">Fiches d'audit</h1>
           {!showCreator && (
             <button 
               onClick={() => setShowCreator(true)} 
-              className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
             >
               <Plus className="h-5 w-5" />
               Nouvelle fiche

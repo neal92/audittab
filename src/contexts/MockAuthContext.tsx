@@ -66,8 +66,8 @@ export function MockAuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('recentlyLoggedIn', 'true');
     localStorage.setItem('lastLoginTime', new Date().toISOString());
     
-    // Supprimer la date du dernier affichage du rappel pour forcer l'affichage à la connexion
-    localStorage.removeItem('trialReminderLastShown');
+    // Note: La popup de rappel d'essai s'affiche maintenant automatiquement 
+    // lors du montage du composant UserManagement, donc pas besoin de forcer ici
     
     window.location.reload();
   };
