@@ -82,45 +82,87 @@ const MOCK_RECORDS: AuditRecord[] = [
 
 // Composant pour la popup d'alerte des jours d'essai
 function TrialReminderPopup({ daysLeft, onClose }: { daysLeft: number, onClose: () => void }) {
+  // État pour gérer l'animation de fermeture
+  const [isClosing, setIsClosing] = useState(false);
+  
+  // Fonction pour gérer la fermeture avec animation
+  const handleClose = () => {
+    setIsClosing(true);
+    // Attendre la fin de l'animation avant de fermer réellement
+    setTimeout(onClose, 300);
+  };
+  
+  // Effet pour ajouter la classe de flou au contenu principal lors de l'affichage
+  useEffect(() => {
+    const mainContent = document.getElementById('main-content');
+    if (mainContent) {
+      mainContent.classList.add('backdrop-blur-sm', 'transition-all', 'duration-300');
+    }
+    
+    // Nettoyer lors de la fermeture
+    return () => {
+      if (mainContent) {
+        mainContent.classList.remove('backdrop-blur-sm', 'transition-all', 'duration-300');
+      }
+    };
+  }, []);
+  
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-6 relative">
+    <div 
+      className={`fixed inset-0 z-50 flex items-center justify-center p-4
+        transition-opacity duration-300 ease-in-out 
+        ${isClosing ? 'opacity-0' : 'opacity-100'}`}
+    >
+      {/* Overlay avec effet de fondu */}
+      <div 
+        className={`absolute inset-0 bg-black transition-all duration-300 ease-in-out
+          ${isClosing ? 'bg-opacity-0' : 'bg-opacity-60'}`} 
+        onClick={handleClose}
+      ></div>
+      
+      {/* Contenu de la popup avec animation */}
+      <div 
+        className={`bg-white rounded-xl shadow-lg max-w-md w-full p-6 relative
+          transform transition-all duration-300 ease-in-out
+          ${isClosing ? 'scale-95 opacity-0' : 'scale-100 opacity-100'}
+          motion-reduce:transition-none motion-reduce:transform-none`}
+      >
         <button 
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+          onClick={handleClose}
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors"
         >
           <X className="h-5 w-5" />
         </button>
         
         <div className="flex items-center gap-3 mb-4">
-          <div className="bg-blue-100 p-2 rounded-full">
-            <Clock className="h-6 w-6 text-blue-600" />
+          <div className="bg-orange-100 p-2 rounded-full">
+            <Clock className="h-6 w-6 text-orange-600" />
           </div>
-          <h2 className="text-xl font-semibold text-gray-900">Période d'essai en cours</h2>
+          <h2 className="text-xl font-semibold text-orange-900">Période d'essai en cours</h2>
         </div>
         
         <p className="text-gray-600 mb-4">
-          Il vous reste <span className="font-semibold text-blue-600">{daysLeft} jours</span> dans votre période d'essai gratuite.
+          Il vous reste <span className="font-semibold text-orange-600">{daysLeft} jours</span> dans votre période d'essai gratuite.
         </p>
         
         {daysLeft <= 5 && (
-          <p className="text-red-600 mb-4">
+          <p className="text-orange-600 mb-4 animate-pulse">
             Votre période d'essai se termine bientôt ! Pour continuer à utiliser toutes les fonctionnalités, passez à un forfait payant.
           </p>
         )}
         
         <div className="mt-6 flex justify-end gap-3">
           <button 
-            onClick={onClose}
-            className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-gray-800"
+            onClick={handleClose}
+            className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-gray-800 transition-colors"
           >
             Fermer
           </button>
           <button 
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white"
+            className="px-4 py-2 bg-orange-600 hover:bg-orange-700 rounded-lg text-white transition-colors"
             onClick={() => {
               alert('Redirection vers la page d\'abonnement');
-              onClose();
+              handleClose();
             }}
           >
             Voir les forfaits
@@ -153,16 +195,8 @@ export default function AuditRecordCreator() {
       
       setTrialDaysLeft(differenceInDays);
       
-      // Vérifier si on a déjà montré la popup aujourd'hui
-      const lastShownDate = localStorage.getItem('trialReminderLastShown');
-      const today_str = today.toISOString().split('T')[0]; // Format YYYY-MM-DD
-      
-      if (!lastShownDate || lastShownDate !== today_str) {
-        // N'afficher la popup que si nous n'avons pas déjà affiché aujourd'hui
-        setShowTrialReminder(true);
-        // Enregistrer la date d'aujourd'hui
-        localStorage.setItem('trialReminderLastShown', today_str);
-      }
+      // Toujours afficher la popup au chargement de la page
+      setShowTrialReminder(true);
     }
   }, [company]);
   
@@ -638,33 +672,35 @@ export default function AuditRecordCreator() {
         />
       )}
     
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold text-slate-900">Fiches d'audit</h1>
-        {!showCreator && (
-          <button 
-            onClick={() => setShowCreator(true)} 
-            className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-colors"
-          >
-            <Plus className="h-5 w-5" />
-            Nouvelle fiche
-          </button>
+      <div id="main-content" className="transition-all duration-300">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-2xl font-bold text-slate-900">Fiches d'audit</h1>
+          {!showCreator && (
+            <button 
+              onClick={() => setShowCreator(true)} 
+              className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-colors"
+            >
+              <Plus className="h-5 w-5" />
+              Nouvelle fiche
+            </button>
+          )}
+        </div>
+
+        {showCreator ? (
+          selectedTemplate ? renderCreator() : renderTemplateList()
+        ) : (
+          <div className="space-y-8">
+            <div>
+              <h2 className="text-xl font-semibold text-slate-900 mb-4">Fiches récentes</h2>
+              {records.length > 0 ? renderRecordsList() : (
+                <div className="bg-slate-50 rounded-xl p-10 text-center">
+                  <p className="text-slate-600">Aucune fiche d'audit n'a été créée</p>
+                </div>
+              )}
+            </div>
+          </div>
         )}
       </div>
-
-      {showCreator ? (
-        selectedTemplate ? renderCreator() : renderTemplateList()
-      ) : (
-        <div className="space-y-8">
-          <div>
-            <h2 className="text-xl font-semibold text-slate-900 mb-4">Fiches récentes</h2>
-            {records.length > 0 ? renderRecordsList() : (
-              <div className="bg-slate-50 rounded-xl p-10 text-center">
-                <p className="text-slate-600">Aucune fiche d'audit n'a été créée</p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

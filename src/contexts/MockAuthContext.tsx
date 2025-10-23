@@ -61,6 +61,14 @@ export function MockAuthProvider({ children }: { children: ReactNode }) {
       email: email || 'demo@example.com' 
     };
     localStorage.setItem('mockAuthUser', JSON.stringify(mockUser));
+    
+    // Définir un flag pour indiquer une connexion récente
+    localStorage.setItem('recentlyLoggedIn', 'true');
+    localStorage.setItem('lastLoginTime', new Date().toISOString());
+    
+    // Supprimer la date du dernier affichage du rappel pour forcer l'affichage à la connexion
+    localStorage.removeItem('trialReminderLastShown');
+    
     window.location.reload();
   };
 
@@ -73,6 +81,14 @@ export function MockAuthProvider({ children }: { children: ReactNode }) {
       lastName: data.lastName || 'Démonstration'
     };
     localStorage.setItem('mockAuthUser', JSON.stringify(mockUser));
+    
+    // Définir un flag pour indiquer une inscription récente
+    localStorage.setItem('recentlyLoggedIn', 'true');
+    localStorage.setItem('lastLoginTime', new Date().toISOString());
+    
+    // Supprimer la date du dernier affichage du rappel pour forcer l'affichage à la connexion
+    localStorage.removeItem('trialReminderLastShown');
+    
     window.location.reload();
   };
 

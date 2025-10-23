@@ -99,22 +99,22 @@ export default function Dashboard() {
 
       <main className="flex-1 overflow-auto">
         {showTrialNotice && daysRemaining > 0 && (
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-200">
+          <div className="bg-gradient-to-r from-orange-50 to-orange-50 border-b border-orange-200">
             <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Gift className="h-6 w-6 text-green-600" />
+                <Gift className="h-6 w-6 text-orange-600" />
                 <div>
-                  <p className="text-green-900 font-semibold">
+                  <p className="text-orange-900 font-semibold">
                     Essai gratuit de 15 jours
                   </p>
-                  <p className="text-green-700 text-sm">
+                  <p className="text-orange-700 text-sm">
                     Il vous reste {daysRemaining} jour{daysRemaining > 1 ? 's' : ''} pour profiter de toutes les fonctionnalités
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setShowTrialNotice(false)}
-                className="text-green-600 hover:text-green-800 font-medium text-sm"
+                className="text-orange-600 hover:text-blue-800 font-medium text-sm"
               >
                 Fermer
               </button>
