@@ -1,43 +1,40 @@
-import { useState } from 'react';
-import { Building2, Users, FileText, ClipboardList, LogOut, Gift } from 'lucide-react';
-import UserManagement from './UserManagement';
-import FormTemplateBuilder from './FormTemplateBuilder';
-import AuditRecordCreator from './AuditRecordCreator';
-import { useMockAuth } from '../contexts/MockAuthContext';
+import { Users, FileText, ClipboardList, LogOut, Gift } from 'lucide-react';
+import UserManagement from '../GestionUtilisateurs/UserManagement';
+import FormTemplateBuilder from '../StructureFiches/FormTemplateBuilder';
+import AuditRecordCreator from '../CreationFiche/AuditRecordCreator';
+import { useDashboard } from './hooks';
 
+/**
+ * Composant principal du Dashboard
+ * Utilise le hook useDashboard pour la logique métier
+ */
 export default function Dashboard() {
-  const { profile, company, signOut } = useMockAuth();
-  const [activeTab, setActiveTab] = useState<'users' | 'templates' | 'records'>('users');
-  const [showTrialNotice, setShowTrialNotice] = useState(true);
-
-  const handleSignOut = async () => {
-    // Utiliser la fonction signOut du contexte mocké
-    await signOut();
-    // Recharger la page après déconnexion
-    window.location.reload();
-  };
-
-  const getDaysRemaining = () => {
-    if (!company?.trial_end_date) return 0;
-    const now = new Date();
-    const trialEnd = new Date(company.trial_end_date);
-    const diff = trialEnd.getTime() - now.getTime();
-    return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
-  };
-
-  const daysRemaining = getDaysRemaining();
+  const {
+    profile,
+    company,
+    activeTab,
+    showTrialNotice,
+    daysRemaining,
+    setActiveTab,
+    setShowTrialNotice,
+    handleSignOut,
+    handleSubscribe,
+  } = useDashboard();
 
   return (
     <div className="min-h-screen bg-slate-50 flex">
       <aside className="w-64 bg-white border-r border-slate-200 flex flex-col">
         <div className="p-6 border-b border-slate-200">
           <div className="flex items-center gap-2 mb-2">
-            <Building2 className="h-8 w-8 text-slate-700" />
-            <span className="text-2xl font-bold text-slate-800">Audittab</span>
+            <img 
+              src="/public/audittab_logo-seul.png" 
+              alt="AuditTab" 
+              className="h-15 w-auto"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
+            />
           </div>
-          {company && (
-            <p className="text-sm text-slate-600 mt-2">{company.name}</p>
-          )}
         </div>
 
         <nav className="flex-1 p-4">
@@ -45,19 +42,19 @@ export default function Dashboard() {
             onClick={() => setActiveTab('users')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-colors ${
               activeTab === 'users'
-                ? 'bg-slate-100 text-slate-900 font-medium'
+                ? 'bg-slate-100 text-audittab-navy font-medium'
                 : 'text-slate-600 hover:bg-slate-50'
             }`}
           >
             <Users className="h-5 w-5" />
-            Gestion des utilisateurs
+            <span>Utilisateurs</span>
           </button>
 
           <button
             onClick={() => setActiveTab('templates')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-colors ${
               activeTab === 'templates'
-                ? 'bg-slate-100 text-slate-900 font-medium'
+                ? 'bg-slate-100 text-audittab-navy font-medium'
                 : 'text-slate-600 hover:bg-slate-50'
             }`}
           >
@@ -69,7 +66,7 @@ export default function Dashboard() {
             onClick={() => setActiveTab('records')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-colors ${
               activeTab === 'records'
-                ? 'bg-slate-100 text-slate-900 font-medium'
+                ? 'bg-slate-100 text-audittab-navy font-medium'
                 : 'text-slate-600 hover:bg-slate-50'
             }`}
           >
@@ -89,7 +86,7 @@ export default function Dashboard() {
           )}
           <button
             onClick={handleSignOut}
-            className="w-full flex items-center gap-3 px-4 py-2 text-slate-600 hover:bg-slate-50 rounded-lg transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-2 font-bold text-audittab-navy hover:bg-slate-50 rounded-lg transition-colors"
           >
             <LogOut className="h-5 w-5" />
             Déconnexion
@@ -99,19 +96,19 @@ export default function Dashboard() {
 
       <main className="flex-1 overflow-auto">
         {showTrialNotice && daysRemaining > 0 && (
-          <div className="bg-gradient-to-r from-orange-50 to-orange-100 border-b border-orange-200 shadow-sm">
+          <div className="bg-gradient-to-r from-green-50 to-green-100 border-b border-audittab-green-200 shadow-sm">
             <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="bg-orange-100 p-2 rounded-full flex-shrink-0">
-                  <Gift className="h-6 w-6 text-orange-600" />
+                <div className="bg-audittab-green-100 p-2 rounded-full flex-shrink-0">
+                  <Gift className="h-6 w-6 text-audittab-green" />
                 </div>
                 <div>
-                  <p className="text-orange-900 font-semibold">
+                  <p className="text-audittab-navy font-semibold">
                     Essai gratuit de 15 jours
                   </p>
-                  <p className="text-orange-700 text-sm">
+                  <p className="text-audittab-green-700 text-sm">
                     {daysRemaining < 6 ? (
-                      <span className="font-medium text-orange-700">
+                      <span className="font-medium text-audittab-green-700">
                         Plus que {daysRemaining} jour{daysRemaining > 1 ? 's' : ''}! 
                       </span>
                     ) : (
@@ -125,14 +122,14 @@ export default function Dashboard() {
               </div>
               <div className="flex items-center gap-3">
                 <button
-                  onClick={() => alert("Redirection vers la page d'abonnement")}
-                  className="bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors"
+                  onClick={handleSubscribe}
+                  className="bg-audittab-green hover:bg-audittab-green-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors"
                 >
                   Passer à un abonnement
                 </button>
                 <button
                   onClick={() => setShowTrialNotice(false)}
-                  className="text-orange-600 hover:text-orange-800 font-medium text-sm"
+                  className="text-audittab-green hover:text-audittab-green-800 font-medium text-sm"
                 >
                   Fermer
                 </button>

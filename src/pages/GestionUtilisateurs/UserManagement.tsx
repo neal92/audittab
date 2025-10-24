@@ -1,106 +1,22 @@
-import { useState, useEffect } from 'react';
 import { UserPlus, Copy, Check, Mail, Trash2 } from 'lucide-react';
-import { v4 as uuidv4 } from 'uuid'; // Vous devrez peut-être installer uuid: npm install uuid @types/uuid
-import { useMockAuth } from '../contexts/MockAuthContext';
+import { useUserManagement } from './hooks';
 
-// Interface pour les données des utilisateurs (version frontend uniquement)
-interface Profile {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  role: string;
-  company: string;
-  project: string;
-  created_at: string;
-}
-
-// La popup de rappel d'essai a été retirée de ce fichier : elle est gérée par le Dashboard
-
-// Nous utilisons maintenant le contexte d'authentification (useMockAuth)
-// au lieu d'un objet mockCurrentUser directement
-
-// Données mockées pour les utilisateurs
-const mockUsers: Profile[] = [
-  {
-    id: "current-user-id",
-    first_name: "John",
-    last_name: "Doe",
-    email: "john.doe@example.com",
-    role: "admin",
-    company: "Entreprise Démo",
-    project: "Projet Paris",
-    created_at: new Date(2025, 9, 1).toISOString()
-  },
-  {
-    id: "user-2",
-    first_name: "Marie",
-    last_name: "Dubois",
-    email: "marie.dubois@example.com",
-    role: "user",
-    company: "Entreprise Démo",
-    project: "Projet Lyon",
-    created_at: new Date(2025, 9, 10).toISOString()
-  },
-  {
-    id: "user-3",
-    first_name: "Pierre",
-    last_name: "Martin",
-    email: "pierre.martin@example.com",
-    role: "user",
-    company: "Entreprise Démo",
-    project: "Projet Paris",
-    created_at: new Date(2025, 9, 15).toISOString()
-  }
-];
-
+/**
+ * Composant principal pour la gestion des utilisateurs
+ * Utilise le hook useUserManagement pour la logique métier
+ */
 export default function UserManagement() {
-  // Utiliser notre contexte d'authentification mocké
-  const { profile } = useMockAuth();
-  
-  const [users, setUsers] = useState<Profile[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [invitationLink, setInvitationLink] = useState('');
-  const [showInvitation, setShowInvitation] = useState(false);
-  const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    // Simuler un chargement des données
-    const timer = setTimeout(() => {
-      setUsers(mockUsers);
-      setLoading(false);
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, []);
-  
-  // Note: la popup de rappel d'essai est gérée globalement (Dashboard);
-  // ce composant n'affiche plus la popup localement.
-
-  const createInvitation = async () => {
-    // Simuler la création d'un lien d'invitation
-    const mockToken = uuidv4();
-    const link = `${window.location.origin}?invitation=${mockToken}`;
-    setInvitationLink(link);
-    setShowInvitation(true);
-  };
-
-  const copyToClipboard = async () => {
-    try {
-      await navigator.clipboard.writeText(invitationLink);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
-      console.error('Error copying to clipboard:', error);
-    }
-  };
-
-  const deleteUser = async (userId: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) return;
-    
-    // Simuler la suppression d'un utilisateur
-    setUsers(users.filter(user => user.id !== userId));
-  };
+  const {
+    profile,
+    users,
+    loading,
+    invitationLink,
+    showInvitation,
+    copied,
+    createInvitation,
+    copyToClipboard,
+    deleteUser,
+  } = useUserManagement();
 
   if (loading) {
     return (
@@ -116,12 +32,12 @@ export default function UserManagement() {
       
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Gestion des utilisateurs</h1>
+          <h1 className="text-3xl font-bold text-audittab-navy">Gestion des utilisateurs</h1>
           <p className="text-slate-600 mt-1">Gérez les membres de votre équipe</p>
         </div>
         <button
           onClick={createInvitation}
-          className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-audittab-green text-white rounded-lg hover:bg-audittab-green-700 transition-colors"
         >
           <UserPlus className="h-5 w-5" />
           Inviter un utilisateur
@@ -129,11 +45,11 @@ export default function UserManagement() {
       </div>
 
       {showInvitation && (
-        <div className="mb-6 p-6 bg-orange-50 border border-orange-200 rounded-xl">
-          <h3 className="text-lg font-semibold text-orange-900 mb-3">
+        <div className="mb-6 p-6 bg-audittab-green-50 border border-audittab-green-200 rounded-xl">
+          <h3 className="text-lg font-semibold text-audittab-navy mb-3">
             Lien d'invitation créé
           </h3>
-          <p className="text-orange-700 text-sm mb-4">
+          <p className="text-audittab-green-700 text-sm mb-4">
             Partagez ce lien avec la personne que vous souhaitez inviter. Elle sera automatiquement ajoutée à votre entreprise et projet.
           </p>
           <div className="flex gap-2">
@@ -141,11 +57,11 @@ export default function UserManagement() {
               type="text"
               value={invitationLink}
               readOnly
-              className="flex-1 px-4 py-2 bg-white border border-orange-300 rounded-lg text-sm"
+              className="flex-1 px-4 py-2 bg-white border border-audittab-green-300 rounded-lg text-sm"
             />
             <button
               onClick={copyToClipboard}
-              className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-audittab-green text-white rounded-lg hover:bg-audittab-green-700 transition-colors"
             >
               {copied ? (
                 <>
@@ -220,7 +136,7 @@ export default function UserManagement() {
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                     user.role === 'admin'
-                      ? 'bg-orange-100 text-orange-800'
+                      ? 'bg-audittab-green-100 text-audittab-green-800'
                       : 'bg-blue-100 text-blue-800'
                   }`}>
                     {user.role === 'admin' ? 'Administrateur' : 'Utilisateur'}

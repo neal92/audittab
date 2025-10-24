@@ -1,262 +1,47 @@
-import { useState, useEffect } from 'react';
 import { Plus, GripVertical, X, Save, Trash2, Edit, FileText } from 'lucide-react';
-import { FormTemplate } from '../lib/types';
-import { useMockAuth } from '../contexts/MockAuthContext';
 import { v4 as uuidv4 } from 'uuid';
+import { useFormTemplateBuilder } from './hooks';
+import { FIELD_TYPES, Field } from './data';
+import { MOCK_PROJECTS } from '../CreationFiche/data';
 
-// Interface pour un point de contrôle défini dans le template
-interface CheckpointItem {
-  id: string;
-  label: string;
-  description: string;
-}
-
-// Interface pour une option dans une liste déroulante
-interface OptionItem {
-  id: string;
-  label: string;
-}
-
-// Interface pour un élément de case à cocher
-interface CheckboxItem {
-  id: string;
-  label: string;
-}
-
-interface Field {
-  id: string;
-  type: 'text' | 'number' | 'date' | 'select' | 'duration' | 'checkbox' | 'photo' | 'checkpoints';
-  label: string;
-  required: boolean;
-  options?: OptionItem[]; // Liste des options pour les listes déroulantes
-  checkboxes?: CheckboxItem[]; // Liste des éléments à cocher pour les cases à cocher
-  checkpoints?: CheckpointItem[]; // Liste des points de contrôle prédéfinis pour ce champ
-}
-
-const FIELD_TYPES = [
-  { value: 'text', label: 'Texte' },
-  { value: 'number', label: 'Nombre' },
-  { value: 'date', label: 'Date' },
-  { value: 'duration', label: 'Durée' },
-  { value: 'select', label: 'Liste déroulante' },
-  { value: 'checkbox', label: 'Case à cocher' },
-  { value: 'photo', label: 'Photo' },
-  { value: 'checkpoints', label: 'Points de contrôle' },
-];
-
-// Données mockées pour simuler les templates
-const MOCK_TEMPLATES: FormTemplate[] = [
-  {
-    id: '1',
-    company_id: 'mock-company-id',
-    name: 'Fiche d\'audit standard',
-    description: 'Template standard pour les audits quotidiens',
-    fields: [
-      { id: '1', type: 'text', label: 'Projet', required: true },
-      { id: '2', type: 'text', label: 'Intervention', required: true },
-      { id: '3', type: 'text', label: 'Activité', required: true },
-      { id: '4', type: 'duration', label: 'Durée', required: false },
-      { id: '5', type: 'text', label: 'Opération', required: false },
-    ],
-    created_by: 'mock-user-id',
-    created_at: new Date(2025, 9, 1).toISOString(),
-    updated_at: new Date(2025, 9, 1).toISOString(),
-  },
-  {
-    id: '2',
-    company_id: 'mock-company-id',
-    name: 'Contrôle de sécurité',
-    description: 'Template pour les vérifications de sécurité',
-    fields: [
-      { id: '1', type: 'text', label: 'Site', required: true },
-      { id: '2', type: 'checkbox', label: 'EPI présents', required: true },
-      { id: '3', type: 'checkpoints', label: 'Points de contrôle', required: true },
-    ],
-    created_by: 'mock-user-id',
-    created_at: new Date(2025, 9, 5).toISOString(),
-    updated_at: new Date(2025, 9, 5).toISOString(),
-  }
-];
-
+/**
+ * Composant principal pour la construction de templates de formulaires
+ * Utilise le hook useFormTemplateBuilder pour la logique métier
+ */
 export default function FormTemplateBuilder() {
-  const { profile } = useMockAuth();
-  const [templates, setTemplates] = useState<FormTemplate[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showBuilder, setShowBuilder] = useState(false);
-  const [editingTemplate, setEditingTemplate] = useState<FormTemplate | null>(null);
-
-  const [templateName, setTemplateName] = useState('');
-  const [templateDescription, setTemplateDescription] = useState('');
-  const [fields, setFields] = useState<Field[]>([
-    { id: '1', type: 'text', label: 'Projet', required: true },
-    { id: '2', type: 'text', label: 'Intervention', required: true },
-    { id: '3', type: 'text', label: 'Activité', required: true },
-    { id: '4', type: 'duration', label: 'Durée', required: false },
-    { id: '5', type: 'text', label: 'Opération', required: false },
-    { id: '6', type: 'checkpoints', label: 'Points de contrôle', required: false },
-  ]);
-
-  const [draggedField, setDraggedField] = useState<string | null>(null);
-
-  useEffect(() => {
-    loadTemplates();
-  }, [profile]);
-
-  const loadTemplates = () => {
-    setLoading(true);
-    try {
-      // Essayer de charger depuis localStorage d'abord
-      const storedTemplates = localStorage.getItem('formTemplates');
-      
-      if (storedTemplates) {
-        setTemplates(JSON.parse(storedTemplates));
-      } else {
-        // Sinon, utiliser les données mockées
-        setTemplates(MOCK_TEMPLATES);
-        // Et les sauvegarder dans localStorage
-        localStorage.setItem('formTemplates', JSON.stringify(MOCK_TEMPLATES));
-      }
-    } catch (error) {
-      console.error('Error loading templates:', error);
-      // En cas d'erreur, utiliser les données mockées
-      setTemplates(MOCK_TEMPLATES);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const addField = () => {
-    const newField: Field = {
-      id: Date.now().toString(),
-      type: 'text',
-      label: 'Nouveau champ',
-      required: false,
-      checkpoints: [] // Initialiser un tableau vide pour les points de contrôle
-    };
-    setFields([...fields, newField]);
-  };
-
-  const updateField = (id: string, updates: Partial<Field>) => {
-    setFields(fields.map(f => f.id === id ? { ...f, ...updates } : f));
-  };
-
-  const removeField = (id: string) => {
-    setFields(fields.filter(f => f.id !== id));
-  };
-
-  const handleDragStart = (id: string) => {
-    setDraggedField(id);
-  };
-
-  const handleDragOver = (e: React.DragEvent, id: string) => {
-    e.preventDefault();
-    if (!draggedField || draggedField === id) return;
-
-    const draggedIndex = fields.findIndex(f => f.id === draggedField);
-    const targetIndex = fields.findIndex(f => f.id === id);
-
-    const newFields = [...fields];
-    const [removed] = newFields.splice(draggedIndex, 1);
-    newFields.splice(targetIndex, 0, removed);
-
-    setFields(newFields);
-  };
-
-  const handleDragEnd = () => {
-    setDraggedField(null);
-  };
-
-    const saveTemplate = () => {
-    if (!templateName) {
-      alert('Veuillez saisir un nom pour ce modèle');
-      return;
-    }
-
-    try {
-      let updatedTemplates;
-
-      if (editingTemplate) {
-        // Mise à jour d'un template existant
-        updatedTemplates = templates.map(t => 
-          t.id === editingTemplate.id ? {
-            ...t,
-            name: templateName,
-            description: templateDescription,
-            fields: fields,
-            updated_at: new Date().toISOString()
-          } : t
-        );
-        setTemplates(updatedTemplates);
-      } else {
-        // Ajout d'un nouveau template
-        const newTemplate: FormTemplate = {
-          id: uuidv4(),
-          company_id: profile?.company_id || 'mock-company-id',
-          name: templateName,
-          description: templateDescription,
-          fields: fields,
-          created_by: profile?.id || 'mock-user-id',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-        updatedTemplates = [newTemplate, ...templates];
-        setTemplates(updatedTemplates);
-      }
-
-      // Sauvegarder dans localStorage pour persistance
-      localStorage.setItem('formTemplates', JSON.stringify(updatedTemplates));
-      
-      // Afficher un message de confirmation
-      alert('Structure sauvegardée avec succès !');
-      
-      resetBuilder();
-    } catch (error) {
-      console.error('Error saving template:', error);
-      alert('Erreur lors de la sauvegarde de la structure');
-    }
-  };
-
-  const editTemplate = (template: FormTemplate) => {
-    setEditingTemplate(template);
-    setTemplateName(template.name);
-    setTemplateDescription(template.description);
-    setFields(template.fields);
-    setShowBuilder(true);
-  };
-
-  const deleteTemplate = (id: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cette structure ?')) return;
-
-    try {
-      // Supprimer le template du state local
-      const updatedTemplates = templates.filter(template => template.id !== id);
-      setTemplates(updatedTemplates);
-      
-      // Mettre à jour le localStorage
-      localStorage.setItem('formTemplates', JSON.stringify(updatedTemplates));
-      
-      // Afficher un message de confirmation
-      alert('Structure supprimée avec succès !');
-    } catch (error) {
-      console.error('Error deleting template:', error);
-      alert('Erreur lors de la suppression de la structure');
-    }
-  };
-
-  const resetBuilder = () => {
-    setShowBuilder(false);
-    setEditingTemplate(null);
-    setTemplateName('');
-    setTemplateDescription('');
-    setFields([
-      { id: '1', type: 'text', label: 'Projet', required: true },
-      { id: '2', type: 'text', label: 'Intervention', required: true },
-      { id: '3', type: 'text', label: 'Activité', required: true },
-      { id: '4', type: 'duration', label: 'Durée', required: false },
-      { id: '5', type: 'text', label: 'Opération', required: false },
-      { id: '6', type: 'checkpoints', label: 'Points de contrôle', required: false },
-    ]);
-  };
+  const {
+    templates,
+    loading,
+    showBuilder,
+    editingTemplate,
+    templateName,
+    templateDescription,
+    templateProject,
+    templateIntervention,
+    operations,
+    fields,
+    setTemplateName,
+    setTemplateDescription,
+    setTemplateProject,
+    setTemplateIntervention,
+    setShowBuilder,
+    addField,
+    updateField,
+    removeField,
+    addOperation,
+    updateOperation,
+    removeOperation,
+    addCheckpointToOperation,
+    removeCheckpointFromOperation,
+    updateOperationCheckpoint,
+    handleDragStart,
+    handleDragOver,
+    handleDragEnd,
+    saveTemplate,
+    editTemplate,
+    deleteTemplate,
+    resetBuilder,
+  } = useFormTemplateBuilder();
 
   if (loading) {
     return (
@@ -285,41 +70,236 @@ export default function FormTemplateBuilder() {
           </button>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-6">
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            <h2 className="text-lg font-semibold text-slate-900 mb-4">Configuration</h2>
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="space-y-6">
+            {/* Section 1: Informations de base */}
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+              <h2 className="text-lg font-semibold text-slate-900 mb-4">Informations de base</h2>
 
-            <div className="space-y-4 mb-6">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Nom de la structure
-                </label>
-                <input
-                  type="text"
-                  value={templateName}
-                  onChange={(e) => setTemplateName(e.target.value)}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent"
-                  placeholder="Ex: Audit de chantier"
-                />
-              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Nom de la structure
+                  </label>
+                  <input
+                    type="text"
+                    value={templateName}
+                    onChange={(e) => setTemplateName(e.target.value)}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent"
+                    placeholder="Ex: Audit de chantier"
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Description
-                </label>
-                <textarea
-                  value={templateDescription}
-                  onChange={(e) => setTemplateDescription(e.target.value)}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent"
-                  rows={3}
-                  placeholder="Description de cette structure..."
-                />
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Description
+                  </label>
+                  <textarea
+                    value={templateDescription}
+                    onChange={(e) => setTemplateDescription(e.target.value)}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent"
+                    rows={3}
+                    placeholder="Description de cette structure..."
+                  />
+                </div>
               </div>
             </div>
 
-            <div className="border-t border-slate-200 pt-4">
+            {/* Section 2: Configuration (Projet, Intervention) */}
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+              <h2 className="text-lg font-semibold text-slate-900 mb-4">Configuration</h2>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Projet (optionnel)
+                  </label>
+                  <select
+                    value={templateProject}
+                    onChange={(e) => setTemplateProject(e.target.value)}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent"
+                  >
+                    <option value="">Sélectionner un projet...</option>
+                    {MOCK_PROJECTS.map(project => (
+                      <option key={project.id} value={project.id}>
+                        {project.name}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Si vous sélectionnez un projet, il sera pré-sélectionné lors de la création d'une fiche
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Intervention (optionnel)
+                  </label>
+                  <input
+                    type="text"
+                    value={templateIntervention}
+                    onChange={(e) => setTemplateIntervention(e.target.value)}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent"
+                    placeholder="Ex: Visite de chantier"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">
+                    Si vous renseignez une intervention, elle sera pré-remplie lors de la création d'une fiche
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Section 3: Opérations */}
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="font-semibold text-slate-900">Champs</h3>
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-900">Opérations</h2>
+                  <p className="text-xs text-slate-500 mt-1">Définissez les opérations et leurs points de contrôle spécifiques</p>
+                </div>
+                <button
+                  onClick={addOperation}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-audittab-green-100 text-audittab-green-700 rounded-lg hover:bg-audittab-green-200 transition-colors text-sm"
+                >
+                  <Plus className="h-4 w-4" />
+                  Ajouter une opération
+                </button>
+              </div>
+
+              <div className="space-y-4 max-h-96 overflow-y-auto">
+                {operations.map((operation) => (
+                  <div key={operation.id} className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                    <div className="flex items-start gap-3 mb-3">
+                      <div className="flex-1">
+                        <input
+                          type="text"
+                          value={operation.name}
+                          onChange={(e) => updateOperation(operation.id, { name: e.target.value })}
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-medium"
+                          placeholder="Nom de l'opération (ex: Imprimante, Ordinateur...)"
+                        />
+                      </div>
+                      <button
+                        onClick={() => removeOperation(operation.id)}
+                        className="text-red-600 hover:text-red-800 transition-colors flex-shrink-0 mt-2"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
+                    </div>
+
+                    <div className="ml-4 space-y-2">
+                      <label className="block text-xs font-medium text-slate-600 mb-2">
+                        Points de contrôle pour cette opération
+                      </label>
+                      {operation.checkpoints.map((checkpoint) => (
+                        <div key={checkpoint.id} className="bg-white p-3 rounded border border-slate-200 mb-2">
+                          <div className="flex gap-2 items-start mb-2">
+                            <div className="flex-1 space-y-2">
+                              <input
+                                type="text"
+                                value={checkpoint.label}
+                                onChange={(e) => updateOperationCheckpoint(operation.id, checkpoint.id, { label: e.target.value })}
+                                className="w-full px-2 py-1 border border-slate-300 rounded text-sm"
+                                placeholder="Nom du point de contrôle (ex: Fonctionnelle)"
+                              />
+                              <input
+                                type="text"
+                                value={checkpoint.description || ''}
+                                onChange={(e) => updateOperationCheckpoint(operation.id, checkpoint.id, { description: e.target.value })}
+                                className="w-full px-2 py-1 border border-slate-300 rounded text-xs"
+                                placeholder="Description (optionnel)"
+                              />
+                            </div>
+                            <button
+                              onClick={() => removeCheckpointFromOperation(operation.id, checkpoint.id)}
+                              className="text-red-500 hover:text-red-700 flex-shrink-0 mt-1"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                          
+                          <div className="border-t border-slate-200 pt-2">
+                            <label className="block text-xs font-medium text-slate-600 mb-1">Type de champ</label>
+                            <select
+                              value={checkpoint.type || 'conforme'}
+                              onChange={(e) => updateOperationCheckpoint(operation.id, checkpoint.id, { 
+                                type: e.target.value as any,
+                                options: e.target.value === 'select' ? (checkpoint.options || []) : undefined
+                              })}
+                              className="w-full px-2 py-1 border border-slate-300 rounded text-xs"
+                            >
+                              <option value="conforme">Conforme / Non conforme</option>
+                              <option value="text">Texte</option>
+                              <option value="number">Nombre</option>
+                              <option value="select">Liste déroulante</option>
+                              <option value="checkbox">Case à cocher</option>
+                            </select>
+                            
+                            {/* Options pour les champs select */}
+                            {checkpoint.type === 'select' && (
+                              <div className="mt-2 space-y-1">
+                                <label className="block text-xs font-medium text-slate-600">Options</label>
+                                {(checkpoint.options || []).map((option, optIndex) => (
+                                  <div key={option.id} className="flex gap-1">
+                                    <input
+                                      type="text"
+                                      value={option.label}
+                                      onChange={(e) => {
+                                        const newOptions = [...(checkpoint.options || [])];
+                                        newOptions[optIndex] = { ...newOptions[optIndex], label: e.target.value };
+                                        updateOperationCheckpoint(operation.id, checkpoint.id, { options: newOptions });
+                                      }}
+                                      className="flex-1 px-2 py-1 border border-slate-300 rounded text-xs"
+                                      placeholder="Option"
+                                    />
+                                    <button
+                                      onClick={() => {
+                                        const newOptions = [...(checkpoint.options || [])];
+                                        newOptions.splice(optIndex, 1);
+                                        updateOperationCheckpoint(operation.id, checkpoint.id, { options: newOptions });
+                                      }}
+                                      className="text-red-500 hover:text-red-700"
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </button>
+                                  </div>
+                                ))}
+                                <button
+                                  onClick={() => {
+                                    const newOptions = [...(checkpoint.options || []), { id: uuidv4(), label: '' }];
+                                    updateOperationCheckpoint(operation.id, checkpoint.id, { options: newOptions });
+                                  }}
+                                  className="w-full px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs hover:bg-slate-200"
+                                >
+                                  + Ajouter une option
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                      <button
+                        onClick={() => addCheckpointToOperation(operation.id)}
+                        className="w-full flex items-center justify-center gap-1 px-3 py-2 bg-white border border-slate-300 text-slate-600 rounded hover:bg-slate-50 text-xs"
+                      >
+                        <Plus className="h-3 w-3" />
+                        Ajouter un point de contrôle
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {operations.length === 0 && (
+                  <div className="text-center py-6 bg-slate-50 rounded-lg border border-dashed border-slate-300">
+                    <p className="text-slate-500 text-sm">Aucune opération définie</p>
+                    <p className="text-slate-400 text-xs mt-1">Les opérations permettent de définir des points de contrôle spécifiques</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Section 4: Champs */}
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-semibold text-slate-900">Informations supplémentaires</h2>
                 <button
                   onClick={addField}
                   className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-sm"
@@ -485,7 +465,7 @@ export default function FormTemplateBuilder() {
                               ))}
                             </div>
                             
-                            <button
+                                                        <button
                               type="button"
                               onClick={() => {
                                 const newOption = {
@@ -503,7 +483,7 @@ export default function FormTemplateBuilder() {
                             </button>
                           </div>
                         )}
-                        
+
                         {field.type === 'checkbox' && (
                           <div className="mt-3 space-y-3 border-t border-slate-200 pt-3">
                             <div className="text-sm font-medium text-slate-700">Éléments à cocher</div>
@@ -574,16 +554,123 @@ export default function FormTemplateBuilder() {
             <button
               onClick={saveTemplate}
               disabled={!templateName}
-              className="w-full mt-6 flex items-center justify-center gap-2 px-4 py-3 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-colors disabled:bg-slate-400 disabled:cursor-not-allowed font-medium"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-colors disabled:bg-slate-400 disabled:cursor-not-allowed font-medium"
             >
               <Save className="h-5 w-5" />
               Enregistrer la structure
             </button>
           </div>
 
+          {/* Colonne de droite - Aperçu */}
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
             <h2 className="text-lg font-semibold text-slate-900 mb-4">Aperçu</h2>
+            
+            {/* En-tête simplifié - seulement projet et intervention sans titre */}
+            {(templateProject || templateIntervention) && (
+              <div className="mb-4 pb-4 border-b border-slate-200">
+                <div className="space-y-1 text-sm">
+                  {templateProject && (
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-slate-700">📁</span>
+                      <span className="text-slate-900">
+                        {MOCK_PROJECTS.find(p => p.id === templateProject)?.name || templateProject}
+                      </span>
+                    </div>
+                  )}
+                  {templateIntervention && (
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-slate-700">🔧</span>
+                      <span className="text-slate-900">{templateIntervention}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Opérations - affichées comme des sections dans le corps */}
+            {operations.length > 0 && (
+              <div className="mb-6 space-y-4">
+                <h3 className="font-semibold text-slate-900">Opérations</h3>
+                {operations.map((operation) => (
+                  <div key={operation.id} className="border border-audittab-green-200 rounded-lg p-4 bg-audittab-green-50">
+                    <h4 className="font-semibold text-audittab-navy mb-3">
+                      {operation.name || 'Opération sans nom'}
+                    </h4>
+                    {operation.checkpoints.length > 0 ? (
+                      <div className="space-y-3">
+                        {operation.checkpoints.map((checkpoint) => {
+                          const fieldType = checkpoint.type || 'conforme';
+                          return (
+                            <div key={checkpoint.id} className="bg-white rounded-lg p-3 border border-audittab-green-100">
+                              <div className="mb-2">
+                                <div className="font-medium text-sm text-slate-800">{checkpoint.label}</div>
+                                {checkpoint.description && (
+                                  <div className="text-xs text-slate-500 mt-1">{checkpoint.description}</div>
+                                )}
+                              </div>
+                              
+                              {/* Affichage selon le type de champ */}
+                              {fieldType === 'conforme' && (
+                                <div className="flex gap-2">
+                                  <button className="flex-1 px-3 py-1.5 bg-green-100 text-green-700 rounded-lg text-sm font-medium">
+                                    ✓ Conforme
+                                  </button>
+                                  <button className="flex-1 px-3 py-1.5 bg-red-100 text-red-700 rounded-lg text-sm font-medium">
+                                    ✗ Non conforme
+                                  </button>
+                                </div>
+                              )}
+                              
+                              {fieldType === 'text' && (
+                                <input
+                                  type="text"
+                                  disabled
+                                  className="w-full px-3 py-1.5 border border-slate-300 rounded-lg bg-slate-50 text-sm"
+                                  placeholder="Texte..."
+                                />
+                              )}
+                              
+                              {fieldType === 'number' && (
+                                <input
+                                  type="number"
+                                  disabled
+                                  className="w-full px-3 py-1.5 border border-slate-300 rounded-lg bg-slate-50 text-sm"
+                                  placeholder="0"
+                                />
+                              )}
+                              
+                              {fieldType === 'select' && (
+                                <select disabled className="w-full px-3 py-1.5 border border-slate-300 rounded-lg bg-slate-50 text-sm">
+                                  <option>Sélectionner...</option>
+                                  {checkpoint.options && checkpoint.options.map((option) => (
+                                    <option key={option.id}>{option.label || 'Option'}</option>
+                                  ))}
+                                </select>
+                              )}
+                              
+                              {fieldType === 'checkbox' && (
+                                <div className="flex items-center gap-2">
+                                  <input type="checkbox" disabled className="rounded" />
+                                  <span className="text-sm text-slate-600">Cocher si applicable</span>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="text-sm text-slate-500 italic">Aucun point de contrôle défini</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Champs du formulaire */}
             <div className="space-y-4">
+              {fields.length > 0 && (
+                <h3 className="font-semibold text-slate-900 mb-2">Informations Supplémentaires</h3>
+              )}
               {fields.map((field) => (
                 <div key={field.id}>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -690,12 +777,12 @@ export default function FormTemplateBuilder() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Structure des fiches</h1>
-          <p className="text-slate-600 mt-1">Créez et gérez vos modèles de fiches d'audit</p>
+          <h1 className="text-3xl font-bold text-audittab-navy">Structure des fiches</h1>
+          <p className="text-slate-600 mt-1">Créez et gérez vos modèles de fiches d'audits</p>
         </div>
         <button
           onClick={() => setShowBuilder(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-audittab-green text-white rounded-lg hover:bg-audittab-green-700 transition-colors"
         >
           <Plus className="h-5 w-5" />
           Nouvelle structure
@@ -734,7 +821,19 @@ export default function FormTemplateBuilder() {
             )}
 
             <div className="text-sm text-slate-500">
-              {template.fields.length} champ{template.fields.length > 1 ? 's' : ''}
+              {(() => {
+                const fieldsCount = template.fields.length;
+                const checkpointsCount = template.operations?.reduce((total, op) => 
+                  total + (op.checkpoints?.length || 0), 0
+                ) || 0;
+                const totalCount = fieldsCount + checkpointsCount;
+                
+                return `${totalCount} champ${totalCount > 1 ? 's' : ''}${
+                  template.operations && template.operations.length > 0 
+                    ? ` (${template.operations.length} opération${template.operations.length > 1 ? 's' : ''})` 
+                    : ''
+                }`;
+              })()}
             </div>
           </div>
         ))}
@@ -746,7 +845,7 @@ export default function FormTemplateBuilder() {
           <p className="text-slate-600 mb-4">Aucune structure de fiche créée</p>
           <button
             onClick={() => setShowBuilder(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-audittab-green text-white rounded-lg hover:bg-audittab-green-700 transition-colors"
           >
             <Plus className="h-5 w-5" />
             Créer ma première structure

@@ -1,30 +1,42 @@
 import { Building2, CheckCircle, ClipboardList, Users, TrendingUp, Shield } from 'lucide-react';
+import { useLandingPage } from './hooks';
 
 interface LandingPageProps {
   onLogin: () => void;
   onRegister: () => void;
 }
 
+/**
+ * Composant de la page d'accueil (Landing Page)
+ * Utilise le hook useLandingPage pour la cohérence avec les autres pages
+ */
 export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
+  const handlers = useLandingPage(onLogin, onRegister);
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <nav className="bg-white shadow-sm border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-2">
-              <Building2 className="h-8 w-8 text-slate-700" />
-              <span className="text-2xl font-bold text-slate-800">Audittab</span>
-            </div>
+          <div className="flex items-center gap-2 mb-2">
+            <img 
+              src="/public/audittab_logo-seul.png" 
+              alt="AuditTab" 
+              className="h-20 w-auto"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+          </div>
             <div className="flex gap-3">
               <button
-                onClick={onLogin}
-                className="px-5 py-2 text-slate-700 hover:text-slate-900 font-medium transition-colors"
+                onClick={handlers.onLogin}
+                className="px-5 py-2 text-audittab-navy hover:text-slate-900 font-medium transition-colors"
               >
                 Connexion
               </button>
               <button
-                onClick={onRegister}
-                className="px-5 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 font-medium transition-colors shadow-sm"
+                onClick={handlers.onRegister}
+                className="px-5 py-2 bg-audittab-navy text-white rounded-lg hover:bg-slate-700 font-medium transition-colors shadow-sm"
               >
                 Inscription
               </button>
@@ -35,7 +47,7 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="text-center mb-16">
-          <h1 className="text-5xl font-bold text-slate-900 mb-6">
+          <h1 className="text-5xl font-bold text-audittab-navy mb-6">
             Simplifiez vos audits terrain
           </h1>
           <p className="text-xl text-slate-600 mb-8 max-w-3xl mx-auto">
@@ -43,8 +55,8 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
             Une solution moderne pour des équipes performantes.
           </p>
           <button
-            onClick={onRegister}
-            className="px-8 py-4 bg-slate-800 text-white rounded-lg hover:bg-slate-700 font-semibold text-lg transition-colors shadow-lg hover:shadow-xl"
+            onClick={handlers.onRegister}
+            className="px-8 py-4 bg-audittab-navy text-white rounded-lg hover:bg-slate-700 font-semibold text-lg transition-colors shadow-lg hover:shadow-xl"
           >
             Commencer gratuitement
           </button>
@@ -62,7 +74,7 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
         <div className="grid md:grid-cols-3 gap-8 mb-20">
           <div className="bg-white p-8 rounded-xl shadow-md hover:shadow-lg transition-shadow">
             <ClipboardList className="h-12 w-12 text-slate-700 mb-4" />
-            <h3 className="text-xl font-semibold text-slate-900 mb-3">
+            <h3 className="text-xl font-semibold text-audittab-navy mb-3">
               Fiches personnalisées
             </h3>
             <p className="text-slate-600">
@@ -72,7 +84,7 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
 
           <div className="bg-white p-8 rounded-xl shadow-md hover:shadow-lg transition-shadow">
             <Users className="h-12 w-12 text-slate-700 mb-4" />
-            <h3 className="text-xl font-semibold text-slate-900 mb-3">
+            <h3 className="text-xl font-semibold text-audittab-navy mb-3">
               Collaboration en équipe
             </h3>
             <p className="text-slate-600">
@@ -82,7 +94,7 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
 
           <div className="bg-white p-8 rounded-xl shadow-md hover:shadow-lg transition-shadow">
             <TrendingUp className="h-12 w-12 text-slate-700 mb-4" />
-            <h3 className="text-xl font-semibold text-slate-900 mb-3">
+            <h3 className="text-xl font-semibold text-audittab-navy mb-3">
               Suivi en temps réel
             </h3>
             <p className="text-slate-600">
@@ -94,35 +106,35 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
         <div className="bg-white rounded-2xl shadow-xl p-12 mb-20">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-3xl font-bold text-slate-900 mb-6">
+              <h2 className="text-3xl font-bold text-audittab-navy mb-6">
                 Tout ce dont vous avez besoin pour vos audits
               </h2>
               <div className="space-y-4">
                 <div className="flex items-start gap-3">
                   <CheckCircle className="h-6 w-6 text-green-600 mt-1 flex-shrink-0" />
                   <div>
-                    <h4 className="font-semibold text-slate-900">Gestion de projets</h4>
+                    <h4 className="font-semibold text-audittab-navy">Gestion de projets</h4>
                     <p className="text-slate-600">Organisez vos audits par projet et entreprise</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <CheckCircle className="h-6 w-6 text-green-600 mt-1 flex-shrink-0" />
                   <div>
-                    <h4 className="font-semibold text-slate-900">Points de contrôle détaillés</h4>
+                    <h4 className="font-semibold text-audittab-navy">Points de contrôle détaillés</h4>
                     <p className="text-slate-600">Évaluez chaque point avec photos et conformité</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <CheckCircle className="h-6 w-6 text-green-600 mt-1 flex-shrink-0" />
                   <div>
-                    <h4 className="font-semibold text-slate-900">Interface moderne</h4>
+                    <h4 className="font-semibold text-audittab-navy">Interface moderne</h4>
                     <p className="text-slate-600">Une expérience utilisateur fluide et intuitive</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <CheckCircle className="h-6 w-6 text-green-600 mt-1 flex-shrink-0" />
                   <div>
-                    <h4 className="font-semibold text-slate-900">Sécurité garantie</h4>
+                    <h4 className="font-semibold text-audittab-navy">Sécurité garantie</h4>
                     <p className="text-slate-600">Vos données sont protégées et sécurisées</p>
                   </div>
                 </div>
@@ -147,7 +159,7 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
             Rejoignez les entreprises qui font confiance à Audittab pour leurs audits.
           </p>
           <button
-            onClick={onRegister}
+            onClick={handlers.onRegister}
             className="px-8 py-4 bg-white text-slate-800 rounded-lg hover:bg-slate-100 font-semibold text-lg transition-colors shadow-lg"
           >
             Démarrer maintenant
@@ -157,7 +169,7 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
         {/* Section de prix */}
         <div id="tarifs" className="py-20">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-slate-900 mb-4">
+            <h2 className="text-3xl font-bold text-audittab-navy mb-4">
               Des forfaits adaptés à vos besoins
             </h2>
             <p className="text-lg text-slate-600 max-w-3xl mx-auto">
@@ -169,9 +181,9 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
             {/* Forfait Démarrage */}
             <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200 transition-transform hover:scale-105">
               <div className="p-8">
-                <h3 className="text-xl font-bold text-slate-800 mb-4">Démarrage</h3>
+                <h3 className="text-xl font-bold text-audittab-navy mb-4">Démarrage</h3>
                 <div className="flex items-baseline mb-6">
-                  <span className="text-4xl font-bold text-slate-900">19€</span>
+                  <span className="text-4xl font-bold text-audittab-navy">19€</span>
                   <span className="text-xl text-slate-600 ml-1">/mois</span>
                 </div>
                 <p className="text-slate-600 mb-6">Parfait pour les petites équipes qui débutent avec les audits terrain.</p>
@@ -198,7 +210,7 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
               
               <div className="px-8 pb-8">
                 <button
-                  onClick={onRegister}
+                  onClick={handlers.onRegister}
                   className="w-full py-3 bg-slate-100 text-slate-800 rounded-lg hover:bg-slate-200 font-medium transition-colors"
                 >
                   Commencer l'essai
@@ -207,14 +219,14 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
             </div>
             
             {/* Forfait Pro */}
-            <div className="bg-white rounded-xl shadow-xl overflow-hidden border-2 border-orange-500 transform scale-105">
-              <div className="bg-orange-500 text-white py-2 text-center font-semibold">
+            <div className="bg-white rounded-xl shadow-xl overflow-hidden border-2 border-green-500 transform scale-105">
+              <div className="bg-green-500 text-white py-2 text-center font-semibold">
                 RECOMMANDÉ
               </div>
               <div className="p-8">
-                <h3 className="text-xl font-bold text-slate-800 mb-4">Professionnel</h3>
+                <h3 className="text-xl font-bold text-audittab-navy mb-4">Professionnel</h3>
                 <div className="flex items-baseline mb-6">
-                  <span className="text-4xl font-bold text-slate-900">49€</span>
+                  <span className="text-4xl font-bold text-audittab-navy">49€</span>
                   <span className="text-xl text-slate-600 ml-1">/mois</span>
                 </div>
                 <p className="text-slate-600 mb-6">Pour les équipes professionnelles avec des besoins plus avancés.</p>
@@ -245,8 +257,8 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
               
               <div className="px-8 pb-8">
                 <button
-                  onClick={onRegister}
-                  className="w-full py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium transition-colors"
+                  onClick={handlers.onRegister}
+                  className="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-orange-700 font-medium transition-colors"
                 >
                   Commencer l'essai
                 </button>
@@ -256,9 +268,9 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
             {/* Forfait Entreprise */}
             <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200 transition-transform hover:scale-105">
               <div className="p-8">
-                <h3 className="text-xl font-bold text-slate-800 mb-4">Entreprise</h3>
+                <h3 className="text-xl font-bold text-audittab-navy mb-4">Entreprise</h3>
                 <div className="flex items-baseline mb-6">
-                  <span className="text-4xl font-bold text-slate-900">99€</span>
+                  <span className="text-4xl font-bold text-audittab-navy">99€</span>
                   <span className="text-xl text-slate-600 ml-1">/mois</span>
                 </div>
                 <p className="text-slate-600 mb-6">Solution complète pour les grandes entreprises avec des besoins spécifiques.</p>
@@ -293,7 +305,7 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
               
               <div className="px-8 pb-8">
                 <button
-                  onClick={onRegister}
+                  onClick={handlers.onRegister}
                   className="w-full py-3 bg-slate-100 text-slate-800 rounded-lg hover:bg-slate-200 font-medium transition-colors"
                 >
                   Contacter les ventes

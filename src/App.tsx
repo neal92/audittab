@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import LandingPage from './components/LandingPage';
+import LandingPage from './pages/Landing/LandingPage';
 import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
-import Dashboard from './components/Dashboard';
+import Dashboard from './pages/Dashboard/Dashboard';
 
 import { useMockAuth } from './contexts/MockAuthContext';
 
