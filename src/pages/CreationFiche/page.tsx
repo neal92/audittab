@@ -1,5 +1,5 @@
-import AuditRecordCreator from './AuditRecordCreator';
+import InterventionCreator from '../CreationIntervention/InterventionCreator';
 
 export default function Page() {
-  return <AuditRecordCreator />;
+  return <InterventionCreator />;
 }

@@ -1,7 +1,7 @@
 import { Users, FileText, ClipboardList, LogOut, Gift } from 'lucide-react';
 import UserManagement from '../GestionUtilisateurs/UserManagement';
-import FormTemplateBuilder from '../StructureFiches/FormTemplateBuilder';
-import AuditRecordCreator from '../CreationFiche/AuditRecordCreator';
+import InterventionCreator from '../CreationIntervention/InterventionCreator';
+import RecordCreator from '../CreationFiche/RecordCreator';
 import { useDashboard } from './hooks';
 
 /**
@@ -11,7 +11,6 @@ import { useDashboard } from './hooks';
 export default function Dashboard() {
   const {
     profile,
-    company,
     activeTab,
     showTrialNotice,
     daysRemaining,
@@ -23,13 +22,13 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex">
-      <aside className="w-64 bg-white border-r border-slate-200 flex flex-col">
-        <div className="p-6 border-b border-slate-200">
+      <aside className="w-64 bg-white border-r border-slate-200 flex flex-col h-screen sticky top-0">
+        <div className="p-6 border-b border-slate-200 flex-shrink-0">
           <div className="flex items-center gap-2 mb-2">
             <img 
               src="/public/audittab_logo-seul.png" 
               alt="AuditTab" 
-              className="h-15 w-auto"
+              className="h-16 w-auto"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
               }}
@@ -37,7 +36,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <nav className="flex-1 p-4">
+        <nav className="flex-1 p-4 overflow-y-auto">
           <button
             onClick={() => setActiveTab('users')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-colors ${
@@ -51,15 +50,15 @@ export default function Dashboard() {
           </button>
 
           <button
-            onClick={() => setActiveTab('templates')}
+            onClick={() => setActiveTab('interventions')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-colors ${
-              activeTab === 'templates'
+              activeTab === 'interventions'
                 ? 'bg-slate-100 text-audittab-navy font-medium'
                 : 'text-slate-600 hover:bg-slate-50'
             }`}
           >
             <FileText className="h-5 w-5" />
-            Structure des fiches
+            <span>Mes interventions</span>
           </button>
 
           <button
@@ -71,11 +70,11 @@ export default function Dashboard() {
             }`}
           >
             <ClipboardList className="h-5 w-5" />
-            Création de fiche
+            <span>Création de fiche</span>
           </button>
         </nav>
 
-        <div className="p-4 border-t border-slate-200">
+        <div className="p-4 border-t border-slate-200 flex-shrink-0">
           {profile && (
             <div className="mb-4">
               <p className="text-sm font-medium text-slate-900">
@@ -140,8 +139,8 @@ export default function Dashboard() {
 
         <div className="max-w-7xl mx-auto px-6 py-8">
           {activeTab === 'users' && <UserManagement />}
-          {activeTab === 'templates' && <FormTemplateBuilder />}
-          {activeTab === 'records' && <AuditRecordCreator />}
+          {activeTab === 'interventions' && <InterventionCreator />}
+          {activeTab === 'records' && <RecordCreator />}
         </div>
       </main>
     </div>

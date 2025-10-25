@@ -4,7 +4,7 @@ import { useMockAuth } from '../../contexts/MockAuthContext';
 /**
  * Type pour les onglets du Dashboard
  */
-export type DashboardTab = 'users' | 'templates' | 'records';
+export type DashboardTab = 'users' | 'interventions' | 'records';
 
 /**
  * Hook personnalisé pour la gestion du Dashboard

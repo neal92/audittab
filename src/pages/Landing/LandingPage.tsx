@@ -1,4 +1,4 @@
-import { Building2, CheckCircle, ClipboardList, Users, TrendingUp, Shield } from 'lucide-react';
+import { CheckCircle, ClipboardList, Users, TrendingUp, Shield, Sparkles, Zap, Lock, BarChart3, Globe, Smartphone, Mail, Phone, MapPin, Send } from 'lucide-react';
 import { useLandingPage } from './hooks';
 
 interface LandingPageProps {
@@ -6,37 +6,55 @@ interface LandingPageProps {
   onRegister: () => void;
 }
 
-/**
- * Composant de la page d'accueil (Landing Page)
- * Utilise le hook useLandingPage pour la cohérence avec les autres pages
- */
+
 export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
   const handlers = useLandingPage(onLogin, onRegister);
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <nav className="bg-white shadow-sm border-b border-slate-200">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-audittab-green-50">
+      <nav className="bg-white/80 backdrop-blur-md shadow-sm border-b border-slate-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2">
             <img 
               src="/public/audittab_logo-seul.png" 
               alt="AuditTab" 
-              className="h-20 w-auto"
+              className="h-16 w-auto"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
               }}
             />
           </div>
+          
+          {/* Menu de navigation */}
+          <div className="hidden md:flex items-center gap-8">
+
+            <a href="#qui-sommes-nous" className="text-slate-700 hover:text-audittab-green font-medium transition-colors">
+              Qui sommes-nous
+            </a>
+            <a href="#fonctionnalites" className="text-slate-700 hover:text-audittab-green font-medium transition-colors">
+              Fonctionnalités
+            </a>
+            <a href="#tarifs" className="text-slate-700 hover:text-audittab-green font-medium transition-colors">
+              Tarifs
+            </a>
+            <a href="#partenaires" className="text-slate-700 hover:text-audittab-green font-medium transition-colors">
+              Partenaires
+            </a>
+            <a href="#contact" className="text-slate-700 hover:text-audittab-green font-medium transition-colors">
+              Contact
+            </a>
+          </div>
+          
             <div className="flex gap-3">
               <button
                 onClick={handlers.onLogin}
-                className="px-5 py-2 text-audittab-navy hover:text-slate-900 font-medium transition-colors"
+                className="px-5 py-2 text-audittab-navy hover:text-audittab-green-600 font-medium transition-colors"
               >
                 Connexion
               </button>
               <button
                 onClick={handlers.onRegister}
-                className="px-5 py-2 bg-audittab-navy text-white rounded-lg hover:bg-slate-700 font-medium transition-colors shadow-sm"
+                className="px-5 py-2 bg-gradient-to-r from-audittab-green to-audittab-green-600 text-white rounded-lg hover:shadow-lg hover:scale-105 font-medium transition-all shadow-sm"
               >
                 Inscription
               </button>
@@ -46,34 +64,174 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
       </nav>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="text-center mb-16">
-          <h1 className="text-5xl font-bold text-audittab-navy mb-6">
-            Simplifiez vos audits terrain
-          </h1>
-          <p className="text-xl text-slate-600 mb-8 max-w-3xl mx-auto">
-            Audittab vous permet de créer, gérer et suivre vos audits terrain en toute simplicité.
-            Une solution moderne pour des équipes performantes.
-          </p>
-          <button
-            onClick={handlers.onRegister}
-            className="px-8 py-4 bg-audittab-navy text-white rounded-lg hover:bg-slate-700 font-semibold text-lg transition-colors shadow-lg hover:shadow-xl"
-          >
-            Commencer gratuitement
-          </button>
-          <p className="text-sm text-slate-500 mt-3">Essai gratuit de 15 jours, sans carte bancaire</p>
+        {/* Hero Section avec animation */}
+        <div className="text-center mb-16 relative">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 bg-audittab-green-200 rounded-full blur-3xl opacity-20 animate-pulse"></div>
+          
+          <div className="relative">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-audittab-green-50 border border-audittab-green-200 rounded-full text-audittab-green-700 text-sm font-medium mb-6">
+              <Sparkles className="h-4 w-4" />
+              <span>Nouveau : Essai gratuit de 15 jours</span>
+            </div>
+            
+            <h1 className="text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-audittab-navy to-audittab-green mb-6 leading-tight">
+              Simplifiez vos audits terrain
+            </h1>
+            <p className="text-xl text-slate-600 mb-8 max-w-3xl mx-auto leading-relaxed">
+              Audittab vous permet de créer, gérer et suivre vos audits terrain en toute simplicité.
+              Une solution moderne pour des équipes performantes.
+            </p>
+            <div className="flex items-center justify-center gap-4 flex-wrap">
+              <button
+                onClick={handlers.onRegister}
+                className="px-8 py-4 bg-gradient-to-r from-audittab-green to-audittab-green-600 text-white rounded-lg hover:shadow-2xl hover:scale-105 font-semibold text-lg transition-all shadow-lg flex items-center gap-2"
+              >
+                Commencer gratuitement
+                <Zap className="h-5 w-5" />
+              </button>
+              <button
+                onClick={handlers.onLogin}
+                className="px-8 py-4 bg-white text-audittab-navy rounded-lg hover:shadow-lg font-semibold text-lg transition-all border-2 border-slate-200"
+              >
+                Voir une démo
+              </button>
+            </div>
+            <p className="text-sm text-slate-500 mt-4 flex items-center justify-center gap-2">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              Aucune carte bancaire requise
+            </p>
+          </div>
         </div>
 
-        <div className="mb-20">
+        {/* Screenshot avec effet 3D */}
+        <div className="mb-20 relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-audittab-green-400 to-audittab-navy rounded-2xl blur-xl opacity-20 transform scale-105"></div>
           <img
             src="https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=1200"
             alt="Équipe d'audit terrain"
-            className="w-full h-96 object-cover rounded-2xl shadow-2xl"
+            className="relative w-full h-96 object-cover rounded-2xl shadow-2xl border-4 border-white transform hover:scale-[1.02] transition-transform duration-300"
           />
         </div>
 
+                {/* Section Qui sommes-nous */}
+        <div id="qui-sommes-nous" className="py-20 bg-gradient-to-br from-audittab-navy-50 to-white rounded-3xl mb-20 px-8">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-audittab-navy to-audittab-green mb-4">
+                Qui sommes-nous ?
+              </h2>
+              <p className="text-lg text-slate-600">
+                Une équipe passionnée au service de vos audits terrain
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-12 items-center mb-12">
+              <div>
+                <h3 className="text-2xl font-bold text-audittab-navy mb-4">Notre mission</h3>
+                <p className="text-slate-600 mb-4 leading-relaxed">
+                  Depuis plus de 15 ans, Coppelis développe des solutions logicielles innovantes pour les entreprises. Notre expertise 
+                  en gestion d’interventions terrain et en contrôle qualité nous a permis de bâtir une réputation d’excellence et de 
+                  fiabilité.
+                  Aujourd’hui, nous mettons notre savoir-faire au service d’un nouveau défi : devenir un acteur majeur de l’IA 
+                  souveraine en France et en Europe.
+                </p>
+                <p className="text-slate-600 leading-relaxed">
+                  Notre vision : une intelligence artificielle respectueuse des valeurs européennes, transparente et au service de la 
+                  performance économique.
+                  Grâce à l’intégration de l’Intelligence Artificielle, bénéficiez d’une automatisation avancée, d’analyses 
+                  prédictives et d’une efficacité inégalée.
+                </p>
+ 
+              
+
+              </div>
+              
+              <div className="space-y-6">
+                <div className="flex items-start gap-4 p-4 bg-white rounded-xl shadow-sm">
+                  <div className="w-12 h-12 bg-audittab-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Users className="h-6 w-6 text-audittab-green-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-audittab-navy mb-1">Équipe dédiée</h4>
+                    <p className="text-sm text-slate-600">15 experts passionnés à votre service</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-4 p-4 bg-white rounded-xl shadow-sm">
+                  <div className="w-12 h-12 bg-audittab-navy-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Globe className="h-6 w-6 text-audittab-navy-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-audittab-navy mb-1">Présence nationale</h4>
+                    <p className="text-sm text-slate-600">Basés en France, accompagnement local</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-4 p-4 bg-white rounded-xl shadow-sm">
+                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Shield className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-audittab-navy mb-1">Conformité RGPD</h4>
+                    <p className="text-sm text-slate-600">Vos données sécurisées et conformes</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl p-8 shadow-lg">
+              <h3 className="text-2xl font-bold text-audittab-navy mb-6 text-center">Nos valeurs</h3>
+              <div className="grid md:grid-cols-3 gap-6">
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-gradient-to-br from-audittab-green to-audittab-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Sparkles className="h-8 w-8 text-white" />
+                  </div>
+                  <h4 className="font-semibold text-audittab-navy mb-2">Innovation</h4>
+                  <p className="text-sm text-slate-600">Toujours à la pointe de la technologie</p>
+                </div>
+                
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-gradient-to-br from-audittab-navy to-audittab-navy-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <CheckCircle className="h-8 w-8 text-white" />
+                  </div>
+                  <h4 className="font-semibold text-audittab-navy mb-2">Simplicité</h4>
+                  <p className="text-sm text-slate-600">Des outils intuitifs et efficaces</p>
+                </div>
+                
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Users className="h-8 w-8 text-white" />
+                  </div>
+                  <h4 className="font-semibold text-audittab-navy mb-2">Proximité</h4>
+                  <p className="text-sm text-slate-600">À l'écoute de vos besoins</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats Section */}
         <div className="grid md:grid-cols-3 gap-8 mb-20">
-          <div className="bg-white p-8 rounded-xl shadow-md hover:shadow-lg transition-shadow">
-            <ClipboardList className="h-12 w-12 text-slate-700 mb-4" />
+          <div className="text-center">
+            <div className="text-4xl font-bold text-audittab-green mb-2">10k+</div>
+            <div className="text-slate-600">Audits réalisés</div>
+          </div>
+          <div className="text-center">
+            <div className="text-4xl font-bold text-audittab-green mb-2">98%</div>
+            <div className="text-slate-600">Satisfaction</div>
+          </div>
+          <div className="text-center">
+            <div className="text-4xl font-bold text-audittab-green mb-2">24/7</div>
+            <div className="text-slate-600">Support disponible</div>
+          </div>
+        </div>
+
+        {/* Features Cards avec hover effects */}
+        <div id="fonctionnalites" className="grid md:grid-cols-3 gap-8 mb-20">
+          <div className="bg-white p-8 rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 border border-slate-100 hover:border-audittab-green-200 group">
+            <div className="w-14 h-14 bg-gradient-to-br from-audittab-green-100 to-audittab-green-200 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <ClipboardList className="h-7 w-7 text-audittab-green-700" />
+            </div>
             <h3 className="text-xl font-semibold text-audittab-navy mb-3">
               Fiches personnalisées
             </h3>
@@ -82,8 +240,10 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
             </p>
           </div>
 
-          <div className="bg-white p-8 rounded-xl shadow-md hover:shadow-lg transition-shadow">
-            <Users className="h-12 w-12 text-slate-700 mb-4" />
+          <div className="bg-white p-8 rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 border border-slate-100 hover:border-audittab-green-200 group">
+            <div className="w-14 h-14 bg-gradient-to-br from-audittab-navy-100 to-audittab-navy-200 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <Users className="h-7 w-7 text-audittab-navy-700" />
+            </div>
             <h3 className="text-xl font-semibold text-audittab-navy mb-3">
               Collaboration en équipe
             </h3>
@@ -92,8 +252,10 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
             </p>
           </div>
 
-          <div className="bg-white p-8 rounded-xl shadow-md hover:shadow-lg transition-shadow">
-            <TrendingUp className="h-12 w-12 text-slate-700 mb-4" />
+          <div className="bg-white p-8 rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 border border-slate-100 hover:border-audittab-green-200 group">
+            <div className="w-14 h-14 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <TrendingUp className="h-7 w-7 text-green-700" />
+            </div>
             <h3 className="text-xl font-semibold text-audittab-navy mb-3">
               Suivi en temps réel
             </h3>
@@ -103,36 +265,73 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl p-12 mb-20">
+        {/* Additional Features */}
+        <div className="grid md:grid-cols-3 gap-8 mb-20">
+          <div className="bg-gradient-to-br from-audittab-green-50 to-white p-8 rounded-xl shadow-md hover:shadow-xl transition-all border border-audittab-green-100">
+            <Smartphone className="h-10 w-10 text-audittab-green-600 mb-4" />
+            <h3 className="text-lg font-semibold text-audittab-navy mb-2">
+              Mobile-First
+            </h3>
+            <p className="text-slate-600 text-sm">
+              Utilisez Audittab sur tous vos appareils, en ligne ou hors ligne
+            </p>
+          </div>
+
+          <div className="bg-gradient-to-br from-audittab-navy-50 to-white p-8 rounded-xl shadow-md hover:shadow-xl transition-all border border-audittab-navy-100">
+            <Lock className="h-10 w-10 text-audittab-navy-600 mb-4" />
+            <h3 className="text-lg font-semibold text-audittab-navy mb-2">
+              Sécurité maximale
+            </h3>
+            <p className="text-slate-600 text-sm">
+              Vos données sont chiffrées et hébergées en Europe (RGPD)
+            </p>
+          </div>
+
+          <div className="bg-gradient-to-br from-green-50 to-white p-8 rounded-xl shadow-md hover:shadow-xl transition-all border border-green-100">
+            <BarChart3 className="h-10 w-10 text-green-600 mb-4" />
+            <h3 className="text-lg font-semibold text-audittab-navy mb-2">
+              Rapports détaillés
+            </h3>
+            <p className="text-slate-600 text-sm">
+              Générez des rapports PDF professionnels en un clic
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-xl p-12 mb-20 border border-slate-100">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-audittab-green-100 rounded-full text-audittab-green-700 text-sm font-medium mb-4">
+                <Shield className="h-4 w-4" />
+                <span>Tout-en-un</span>
+              </div>
               <h2 className="text-3xl font-bold text-audittab-navy mb-6">
                 Tout ce dont vous avez besoin pour vos audits
               </h2>
               <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-6 w-6 text-green-600 mt-1 flex-shrink-0" />
+                <div className="flex items-start gap-3 p-4 rounded-lg bg-audittab-green-50 hover:bg-audittab-green-100 transition-colors">
+                  <CheckCircle className="h-6 w-6 text-audittab-green-600 mt-1 flex-shrink-0" />
                   <div>
                     <h4 className="font-semibold text-audittab-navy">Gestion de projets</h4>
                     <p className="text-slate-600">Organisez vos audits par projet et entreprise</p>
                   </div>
                 </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-6 w-6 text-green-600 mt-1 flex-shrink-0" />
+                <div className="flex items-start gap-3 p-4 rounded-lg bg-audittab-navy-50 hover:bg-audittab-navy-100 transition-colors">
+                  <CheckCircle className="h-6 w-6 text-audittab-navy-600 mt-1 flex-shrink-0" />
                   <div>
                     <h4 className="font-semibold text-audittab-navy">Points de contrôle détaillés</h4>
                     <p className="text-slate-600">Évaluez chaque point avec photos et conformité</p>
                   </div>
                 </div>
-                <div className="flex items-start gap-3">
+                <div className="flex items-start gap-3 p-4 rounded-lg bg-green-50 hover:bg-green-100 transition-colors">
                   <CheckCircle className="h-6 w-6 text-green-600 mt-1 flex-shrink-0" />
                   <div>
                     <h4 className="font-semibold text-audittab-navy">Interface moderne</h4>
                     <p className="text-slate-600">Une expérience utilisateur fluide et intuitive</p>
                   </div>
                 </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-6 w-6 text-green-600 mt-1 flex-shrink-0" />
+                <div className="flex items-start gap-3 p-4 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors">
+                  <CheckCircle className="h-6 w-6 text-blue-600 mt-1 flex-shrink-0" />
                   <div>
                     <h4 className="font-semibold text-audittab-navy">Sécurité garantie</h4>
                     <p className="text-slate-600">Vos données sont protégées et sécurisées</p>
@@ -140,33 +339,17 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
                 </div>
               </div>
             </div>
-            <div>
+            <div className="relative">
+              <div className="absolute -inset-4 bg-gradient-to-r from-audittab-green-200 to-audittab-navy-200 rounded-xl blur-2xl opacity-30"></div>
               <img
                 src="https://images.pexels.com/photos/3183197/pexels-photo-3183197.jpeg?auto=compress&cs=tinysrgb&w=800"
                 alt="Audit en cours"
-                className="rounded-xl shadow-lg w-full h-full object-cover"
+                className="relative rounded-xl shadow-2xl w-full h-full object-cover border-4 border-white"
               />
             </div>
           </div>
         </div>
-
-        <div className="text-center bg-slate-800 text-white rounded-2xl p-12 shadow-xl">
-          <Shield className="h-16 w-16 mx-auto mb-6 text-slate-300" />
-          <h2 className="text-3xl font-bold mb-4">
-            Prêt à transformer vos audits terrain ?
-          </h2>
-          <p className="text-slate-300 text-lg mb-8 max-w-2xl mx-auto">
-            Rejoignez les entreprises qui font confiance à Audittab pour leurs audits.
-          </p>
-          <button
-            onClick={handlers.onRegister}
-            className="px-8 py-4 bg-white text-slate-800 rounded-lg hover:bg-slate-100 font-semibold text-lg transition-colors shadow-lg"
-          >
-            Démarrer maintenant
-          </button>
-        </div>
-        
-        {/* Section de prix */}
+                {/* Section de prix */}
         <div id="tarifs" className="py-20">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-audittab-navy mb-4">
@@ -219,37 +402,39 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
             </div>
             
             {/* Forfait Pro */}
-            <div className="bg-white rounded-xl shadow-xl overflow-hidden border-2 border-green-500 transform scale-105">
-              <div className="bg-green-500 text-white py-2 text-center font-semibold">
+            <div className="bg-gradient-to-br from-audittab-green-50 to-white rounded-xl shadow-2xl overflow-hidden border-2 border-audittab-green-500 transform scale-105 relative">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-audittab-green-200 rounded-full blur-3xl opacity-50"></div>
+              <div className="bg-gradient-to-r from-audittab-green to-audittab-green-600 text-white py-2 text-center font-semibold flex items-center justify-center gap-2">
+                <Sparkles className="h-4 w-4" />
                 RECOMMANDÉ
               </div>
-              <div className="p-8">
+              <div className="p-8 relative">
                 <h3 className="text-xl font-bold text-audittab-navy mb-4">Professionnel</h3>
                 <div className="flex items-baseline mb-6">
-                  <span className="text-4xl font-bold text-audittab-navy">49€</span>
+                  <span className="text-4xl font-bold text-audittab-green">49€</span>
                   <span className="text-xl text-slate-600 ml-1">/mois</span>
                 </div>
                 <p className="text-slate-600 mb-6">Pour les équipes professionnelles avec des besoins plus avancés.</p>
                 
                 <ul className="space-y-3 mb-8">
                   <li className="flex items-center gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+                    <CheckCircle className="h-5 w-5 text-audittab-green-600 flex-shrink-0" />
                     <span className="text-slate-700">Jusqu'à 20 utilisateurs</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+                    <CheckCircle className="h-5 w-5 text-audittab-green-600 flex-shrink-0" />
                     <span className="text-slate-700">Fiches illimitées</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+                    <CheckCircle className="h-5 w-5 text-audittab-green-600 flex-shrink-0" />
                     <span className="text-slate-700">Stockage de 25 Go</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+                    <CheckCircle className="h-5 w-5 text-audittab-green-600 flex-shrink-0" />
                     <span className="text-slate-700">Support prioritaire</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+                    <CheckCircle className="h-5 w-5 text-audittab-green-600 flex-shrink-0" />
                     <span className="text-slate-700">Rapports avancés</span>
                   </li>
                 </ul>
@@ -258,7 +443,7 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
               <div className="px-8 pb-8">
                 <button
                   onClick={handlers.onRegister}
-                  className="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-orange-700 font-medium transition-colors"
+                  className="w-full py-3 bg-gradient-to-r from-audittab-green to-audittab-green-600 text-white rounded-lg hover:shadow-lg hover:scale-105 font-medium transition-all"
                 >
                   Commencer l'essai
                 </button>
@@ -308,25 +493,338 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
                   onClick={handlers.onRegister}
                   className="w-full py-3 bg-slate-100 text-slate-800 rounded-lg hover:bg-slate-200 font-medium transition-colors"
                 >
-                  Contacter les ventes
+                  Contacter nos commerciaux
                 </button>
               </div>
             </div>
           </div>
         </div>
+
+        {/* Section Nos Partenaires */}
+        <div id="partenaires" className="py-20 mb-20">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-audittab-navy to-audittab-green mb-4">
+              Nos partenaires
+            </h2>
+            <p className="text-lg text-slate-600 max-w-3xl mx-auto">
+              Ils nous font confiance pour améliorer leurs processus d'audit
+            </p>
+          </div>
+
+          <div className="bg-gradient-to-br from-white to-audittab-green-50 rounded-3xl shadow-xl p-12 border border-audittab-green-100">
+            {/* Logos des partenaires */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-12">
+              {/* Orange Logo */}
+              <div className="flex items-center justify-center p-6 bg-white rounded-xl shadow-md hover:shadow-xl transition-all hover:scale-105">
+                <img
+                  src="/public/Orange_logo.svg.png"
+                  alt="Orange"
+                  className="h-16 w-auto object-contain"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              </div>
+
+              {/* axione */}
+              <div className="flex items-center justify-center p-6 bg-white rounded-xl shadow-md hover:shadow-xl transition-all hover:scale-105">
+                <img
+                  src="/public/images.jpg"
+                  alt="axione"
+                  className="h-16 w-auto object-contain"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              </div>
+
+              {/* THD Bretagne */}
+              <div className="flex items-center justify-center p-6 bg-white rounded-xl shadow-md hover:shadow-xl transition-all hover:scale-105">
+                <img
+                  src="/public/thd bretagne logo.jpg"
+                  alt="THD Bretagne"
+                  className="h-16 w-auto object-contain"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              </div>
+
+              {/* Zayo Group */}
+              <div className="flex items-center justify-center p-6 bg-white rounded-xl shadow-md hover:shadow-xl transition-all hover:scale-105">
+                <img
+                  src="/public/Zayo_Group_logo.png"
+                  alt="Zayo Group"
+                  className="h-16 w-auto object-contain"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              </div>
+
+              {/* Images */}
+              <div className="flex items-center justify-center p-6 bg-white rounded-xl shadow-md hover:shadow-xl transition-all hover:scale-105">
+                <img
+                  src="/public/orange concession.png"
+                  alt="Partenaire"
+                  className="h-17 w-auto object-contain"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Témoignages partenaires */}
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-shadow">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center overflow-hidden">
+                    <img
+                      src="/public/Orange_logo.svg.png"
+                      alt="Orange"
+                      className="w-8 h-8 object-contain"
+                    />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-audittab-navy">Responsable Qualité</p>
+                    <p className="text-sm text-slate-600">Orange</p>
+                  </div>
+                </div>
+                <p className="text-slate-600 text-sm italic">
+                  "Audittab a transformé notre façon de gérer les audits terrain. Un gain de temps considérable !"
+                </p>
+              </div>
+
+              <div className="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-shadow">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center overflow-hidden">
+                    <img
+                      src="/public/thd bretagne logo.jpg"
+                      alt="THD Bretagne"
+                      className="w-8 h-8 object-contain"
+                    />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-audittab-navy">Directeur Technique</p>
+                    <p className="text-sm text-slate-600">THD Bretagne</p>
+                  </div>
+                </div>
+                <p className="text-slate-600 text-sm italic">
+                  "Une solution complète et intuitive. Nos équipes l'ont adoptée immédiatement."
+                </p>
+              </div>
+
+              <div className="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-shadow">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center overflow-hidden">
+                    <img
+                      src="/public/Zayo_Group_logo.png"
+                      alt="Zayo Group"
+                      className="w-8 h-8 object-contain"
+                    />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-audittab-navy">Manager Opérations</p>
+                    <p className="text-sm text-slate-600">Zayo Group</p>
+                  </div>
+                </div>
+                <p className="text-slate-600 text-sm italic">
+                  "Le meilleur outil d'audit que nous ayons utilisé. Support client exceptionnel !"
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* CTA Section with gradient */}
+        <div className="text-center bg-gradient-to-r from-audittab-navy to-audittab-navy-700 text-white rounded-2xl p-12 shadow-xl mb-20 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-audittab-green opacity-10 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-audittab-green-400 opacity-10 rounded-full blur-3xl"></div>
+          
+          <div className="relative">
+            <Shield className="h-16 w-16 mx-auto mb-6 text-audittab-green-300" />
+            <h2 className="text-4xl font-bold mb-4">
+              Prêt à transformer vos audits terrain ?
+            </h2>
+            <p className="text-slate-200 text-lg mb-8 max-w-2xl mx-auto">
+              Rejoignez les 500+ entreprises qui font confiance à Audittab pour leurs audits.
+            </p>
+            <div className="flex items-center justify-center gap-4 flex-wrap">
+              <button
+                onClick={handlers.onRegister}
+                className="px-8 py-4 bg-audittab-green text-white rounded-lg hover:bg-audittab-green-600 hover:scale-105 font-semibold text-lg transition-all shadow-lg flex items-center gap-2"
+              >
+                Démarrer maintenant
+                <Sparkles className="h-5 w-5" />
+              </button>
+              <button
+                onClick={handlers.onLogin}
+                className="px-8 py-4 bg-white text-audittab-navy rounded-lg hover:bg-slate-100 font-semibold text-lg transition-all shadow-lg"
+              >
+                Planifier une démo
+              </button>
+            </div>
+          </div>
+        </div>
+      
+        
+        {/* Section Contact */}
+        <div id="contact" className="py-20 mb-20">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-audittab-navy to-audittab-green mb-4">
+                Contactez-nous
+              </h2>
+              <p className="text-lg text-slate-600">
+                Une question ? Notre équipe est là pour vous répondre
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-8">
+
+              {/* Formulaire de contact */}
+              <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-100">
+                <h3 className="text-xl font-bold text-audittab-navy mb-6">Envoyez-nous un message</h3>
+                <form className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Nom complet
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:ring-2 focus:ring-audittab-green focus:border-audittab-green transition-all"
+                      placeholder="Jean Dupont"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:ring-2 focus:ring-audittab-green focus:border-audittab-green transition-all"
+                      placeholder="votre@email.com"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Entreprise
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:ring-2 focus:ring-audittab-green focus:border-audittab-green transition-all"
+                      placeholder="Votre entreprise"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Message
+                    </label>
+                    <textarea
+                      rows={4}
+                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:ring-2 focus:ring-audittab-green focus:border-audittab-green transition-all resize-none"
+                      placeholder="Décrivez votre besoin..."
+                    ></textarea>
+                  </div>
+                  
+                  <button
+                    type="submit"
+                    className="w-full py-3 bg-gradient-to-r from-audittab-green to-audittab-green-600 text-white rounded-lg hover:shadow-lg hover:scale-[1.02] font-semibold transition-all flex items-center justify-center gap-2"
+                  >
+                    Envoyer le message
+                    <Send className="h-5 w-5" />
+                  </button>
+                </form>
+              </div>
+
+              {/* Informations de contact */}
+              <div className="space-y-6">
+                <div className="bg-gradient-to-br from-audittab-green-50 to-white rounded-2xl shadow-lg p-8 border border-audittab-green-100">
+                  <h3 className="text-xl font-bold text-audittab-navy mb-6">Nos coordonnées</h3>
+                  
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 bg-audittab-green rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Mail className="h-6 w-6 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-audittab-navy mb-1">Email</h4>
+                        <a href="mailto:contact@audittab.com" className="text-slate-600 hover:text-audittab-green transition-colors">
+                          contact@audittab.com
+                        </a>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 bg-audittab-navy rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Phone className="h-6 w-6 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-audittab-navy mb-1">Téléphone</h4>
+                        <a href="tel:+33123456789" className="text-slate-600 hover:text-audittab-green transition-colors">
+                          +33 1 23 45 67 89
+                        </a>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <MapPin className="h-6 w-6 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-audittab-navy mb-1">Adresse</h4>
+                        <p className="text-slate-600">
+                          123 Avenue de l'Innovation<br />
+                          75001 Paris, France
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-audittab-navy-50 to-white rounded-2xl shadow-lg p-8 border border-audittab-navy-100">
+                  <h3 className="text-xl font-bold text-audittab-navy mb-4">Horaires d'ouverture</h3>
+                  <div className="space-y-2 text-slate-600">
+                    <div className="flex justify-between">
+                      <span className="font-medium">Lundi - Vendredi</span>
+                      <span>9h00 - 18h30</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">Samedi</span>
+                      <span>Fermé</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">Dimanche</span>
+                      <span>Fermé</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+
       </div>
 
       <footer className="bg-slate-800 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
-              <div className="flex items-center gap-2 mb-4">
-                <Building2 className="h-8 w-8 text-white" />
-                <span className="text-2xl font-bold">Audittab</span>
+              <div className="flex items-center gap-2 mb-2">
+                <img 
+                  src="/public/audittab_logo-seul.png" 
+                  alt="AuditTab" 
+                  className="h-45 w-auto"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
               </div>
-              <p className="text-slate-300 mb-6">
-                La solution moderne pour simplifier vos audits terrain et améliorer la qualité de vos contrôles.
-              </p>
               <div className="flex space-x-4">
                 <a href="#" className="text-slate-300 hover:text-white">
                   <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -343,11 +841,6 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
                     <path fillRule="evenodd" d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 015.45 2.525c.636-.247 1.363-.416 2.427-.465C8.901 2.013 9.256 2 11.685 2h.63zm-.081 1.802h-.468c-2.456 0-2.784.011-3.807.058-.975.045-1.504.207-1.857.344-.467.182-.8.398-1.15.748-.35.35-.566.683-.748 1.15-.137.353-.3.882-.344 1.857-.047 1.023-.058 1.351-.058 3.807v.468c0 2.456.011 2.784.058 3.807.045.975.207 1.504.344 1.857.182.466.399.8.748 1.15.35.35.683.566 1.15.748.353.137.882.3 1.857.344 1.054.048 1.37.058 4.041.058h.08c2.597 0 2.917-.01 3.96-.058.976-.045 1.505-.207 1.858-.344.466-.182.8-.398 1.15-.748.35-.35.566-.683.748-1.15.137-.353.3-.882.344-1.857.048-1.055.058-1.37.058-4.041v-.08c0-2.597-.01-2.917-.058-3.96-.045-.976-.207-1.505-.344-1.858a3.097 3.097 0 00-.748-1.15 3.098 3.098 0 00-1.15-.748c-.353-.137-.882-.3-1.857-.344-1.023-.047-1.351-.058-3.807-.058zM12 6.865a5.135 5.135 0 110 10.27 5.135 5.135 0 010-10.27zm0 1.802a3.333 3.333 0 100 6.666 3.333 3.333 0 000-6.666zm5.338-3.205a1.2 1.2 0 110 2.4 1.2 1.2 0 010-2.4z" clipRule="evenodd" />
                   </svg>
                 </a>
-                <a href="#" className="text-slate-300 hover:text-white">
-                  <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
-                  </svg>
-                </a>
               </div>
             </div>
             
@@ -357,7 +850,6 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
                 <li><a href="#" className="text-slate-300 hover:text-white">Fonctionnalités</a></li>
                 <li><a href="#tarifs" className="text-slate-300 hover:text-white">Tarifs</a></li>
                 <li><a href="#" className="text-slate-300 hover:text-white">FAQ</a></li>
-                <li><a href="#" className="text-slate-300 hover:text-white">Témoignages</a></li>
               </ul>
             </div>
             
