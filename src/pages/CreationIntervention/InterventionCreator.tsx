@@ -241,11 +241,20 @@ export default function InterventionCreator() {
     });
   };
 
+  // Supprimer une intervention
+  const deleteIntervention = (interventionId: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette intervention ? Cette action est irréversible.')) return;
+    
+    const updatedInterventions = interventions.filter(i => i.id !== interventionId);
+    setInterventions(updatedInterventions);
+    localStorage.setItem('interventions', JSON.stringify(updatedInterventions));
+  };
+
   // Rendre la liste des interventions
   const renderInterventionsList = () => (
     <div className="space-y-4">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-slate-900">Mes interventions</h2>
+        <h2 className="text-2xl font-bold text-audittab-navy">Mes interventions</h2>
         <button
           onClick={startCreating}
           className="flex items-center gap-2 px-4 py-2 bg-audittab-green text-white rounded-lg hover:bg-audittab-green-dark transition-colors"
@@ -273,27 +282,40 @@ export default function InterventionCreator() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {interventions.map(intervention => (
-            <button
-              key={intervention.id}
-              onClick={() => {
-                setCurrentIntervention(intervention);
-                setIsCreating(true);
-              }}
-              className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md hover:border-audittab-green transition-all text-left"
-            >
-              <h3 className="text-lg font-semibold text-slate-900">{intervention.name}</h3>
-              <p className="text-sm text-slate-600 mt-1">{intervention.description}</p>
-              <div className="flex items-center justify-between mt-4 text-sm text-slate-500">
-                <span>{intervention.operations.length} opération(s)</span>
-                <span>
-                  {new Date(intervention.created_at).toLocaleDateString('fr-FR', {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric'
-                  })}
-                </span>
-              </div>
-            </button>
+            <div key={intervention.id} className="relative">
+              <button
+                onClick={() => {
+                  setCurrentIntervention(intervention);
+                  setIsCreating(true);
+                }}
+                className="w-full bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md hover:border-audittab-green transition-all text-left"
+              >
+                <h3 className="text-lg font-semibold text-slate-900">{intervention.name}</h3>
+                <p className="text-sm text-slate-600 mt-1">{intervention.description}</p>
+                <div className="flex items-center justify-between mt-4 text-sm text-slate-500">
+                  <span>{intervention.operations.length} opération(s)</span>
+                  <span>
+                    {new Date(intervention.created_at).toLocaleDateString('fr-FR', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric'
+                    })}
+                  </span>
+                </div>
+              </button>
+              
+              {/* Bouton de suppression */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  deleteIntervention(intervention.id);
+                }}
+                className="absolute top-2 right-2 p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                title="Supprimer l'intervention"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
           ))}
         </div>
       )}
