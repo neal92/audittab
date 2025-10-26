@@ -1,4 +1,4 @@
-import { Users, FileText, ClipboardList, LogOut, Gift } from 'lucide-react';
+import { Users, FileText, ClipboardList, LogOut, Gift, X } from 'lucide-react';
 import UserManagement from '../GestionUtilisateurs/UserManagement';
 import InterventionCreator from '../CreationIntervention/InterventionCreator';
 import RecordCreator from '../CreationFiche/RecordCreator';
@@ -13,11 +13,13 @@ export default function Dashboard() {
     profile,
     activeTab,
     showTrialNotice,
+    showTrialPopup,
     daysRemaining,
     setActiveTab,
     setShowTrialNotice,
     handleSignOut,
     handleSubscribe,
+    closeTrialPopup,
   } = useDashboard();
 
   return (
@@ -143,6 +145,51 @@ export default function Dashboard() {
           {activeTab === 'records' && <RecordCreator />}
         </div>
       </main>
+
+      {/* Popup de période d'essai */}
+      {showTrialPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="bg-audittab-green-100 p-3 rounded-full">
+                  <Gift className="h-8 w-8 text-audittab-green" />
+                </div>
+                <button
+                  onClick={closeTrialPopup}
+                  className="text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+
+              <div className="text-center">
+                <h3 className="text-xl font-bold text-audittab-navy mb-2">
+                  Période d'essai
+                </h3>
+                <p className="text-slate-600 mb-4">
+                  Vous disposez de <span className="font-semibold text-audittab-green">{daysRemaining} jour{daysRemaining > 1 ? 's' : ''}</span> de période d'essai
+                </p>
+
+                <div className="flex gap-3 justify-center">
+                  <button
+                    onClick={handleSubscribe}
+                    className="bg-audittab-green hover:bg-audittab-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                  >
+                    Passer à un abonnement
+                  </button>
+                  <button
+                    onClick={closeTrialPopup}
+                    className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2 px-4 rounded-lg transition-colors"
+                  >
+                    Continuer l'essai
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

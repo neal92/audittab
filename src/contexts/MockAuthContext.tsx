@@ -95,6 +95,7 @@ export function MockAuthProvider({ children }: { children: ReactNode }) {
   const signOut = async (): Promise<void> => {
     // Supprimer l'utilisateur mocké de localStorage
     localStorage.removeItem('mockAuthUser');
+    localStorage.removeItem('trialPopupShown');
     setUser(null);
     setProfile(null);
     setCompany(null);
