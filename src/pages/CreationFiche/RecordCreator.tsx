@@ -1,143 +1,39 @@
-import { useState, useEffect } from 'react';
 import { CheckSquare, XSquare, Minus, Camera, ArrowLeft, Save, Paperclip, Mic, Star, Plus } from 'lucide-react';
-import { Intervention, OperationField, Project } from '../../lib/types';
-import { v4 as uuidv4 } from 'uuid';
-
-const MOCK_PROJECTS: Project[] = [
-  { id: '1', company_id: 'mock-company', name: 'Projet Paris', description: 'Rénovation bureaux', created_at: new Date().toISOString() },
-  { id: '2', company_id: 'mock-company', name: 'Projet Lyon', description: 'Construction usine', created_at: new Date().toISOString() },
-  { id: '3', company_id: 'mock-company', name: 'Projet Marseille', description: 'Extension entrepôt', created_at: new Date().toISOString() },
-];
-
-interface RecordData {
-  [operationId: string]: {
-    [fieldId: string]: any;
-  };
-}
-
-interface FieldComments {
-  [operationId: string]: {
-    [fieldId: string]: string;
-  };
-}
-
-interface AuditRecord {
-  id: string;
-  intervention_id: string;
-  intervention_name: string;
-  project_id?: string;
-  project_name?: string;
-  created_by: string;
-  data: RecordData;
-  comments?: FieldComments; // Commentaires pour les checkpoints
-  created_at: string;
-  completed: boolean;
-}
+import { OperationField } from '../../lib/types';
+import { useRecordCreator } from './hooks';
+import { MOCK_PROJECTS } from './data';
 
 /**
  * Composant pour créer et remplir des fiches basées sur des interventions
  */
 export default function RecordCreator() {
-  const [interventions, setInterventions] = useState<Intervention[]>([]);
-  const [records, setRecords] = useState<AuditRecord[]>([]);
-  const [selectedIntervention, setSelectedIntervention] = useState<Intervention | null>(null);
-  const [selectedProject, setSelectedProject] = useState<string>('');
-  const [formData, setFormData] = useState<RecordData>({});
-  const [fieldComments, setFieldComments] = useState<FieldComments>({});
-  const [isCreating, setIsCreating] = useState(false);
-  const [pendingIntervention, setPendingIntervention] = useState<Intervention | null>(null);
-  const [viewingRecord, setViewingRecord] = useState<AuditRecord | null>(null);
-  const [showNewRecordModal, setShowNewRecordModal] = useState(false);
-  const [recordTitle, setRecordTitle] = useState<string>('');
-
-  // Charger les interventions depuis localStorage
-  useEffect(() => {
-    const storedInterventions = localStorage.getItem('interventions');
-    if (storedInterventions) {
-      setInterventions(JSON.parse(storedInterventions));
-    }
-
-    const storedRecords = localStorage.getItem('auditRecords');
-    if (storedRecords) {
-      setRecords(JSON.parse(storedRecords));
-    }
-  }, []);
-
-  // Annuler la création
-  const cancelCreating = () => {
-    setSelectedIntervention(null);
-    setSelectedProject('');
-    setFormData({});
-    setFieldComments({});
-    setIsCreating(false);
-  };
-
-  // Mettre à jour une valeur de champ
-  const updateFieldValue = (operationId: string, fieldId: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [operationId]: {
-        ...(prev[operationId] || {}),
-        [fieldId]: value
-      }
-    }));
-  };
-
-  // Mettre à jour un commentaire de champ
-  const updateFieldComment = (operationId: string, fieldId: string, comment: string) => {
-    setFieldComments(prev => ({
-      ...prev,
-      [operationId]: {
-        ...(prev[operationId] || {}),
-        [fieldId]: comment
-      }
-    }));
-  };
-
-  // Sauvegarder la fiche
-  const saveRecord = () => {
-    if (!selectedIntervention) return;
-    if (!selectedProject) {
-      alert('Veuillez sélectionner un projet');
-      return;
-    }
-
-    const project = MOCK_PROJECTS.find(p => p.id === selectedProject);
-    
-    // Vérifier s'il y a des non-conformités
-    const hasNonConforme = Object.values(formData).some(operationData => 
-      Object.values(operationData).some(value => value === 'non_conforme')
-    );
-    
-    const newRecord: AuditRecord = {
-      id: uuidv4(),
-      intervention_id: selectedIntervention.id,
-      intervention_name: selectedIntervention.name,
-      project_id: selectedProject,
-      project_name: project?.name,
-      created_by: 'mock-user',
-      data: formData,
-      comments: fieldComments,
-      created_at: new Date().toISOString(),
-      completed: !hasNonConforme,
-    };
-
-    const updatedRecords = [newRecord, ...records];
-    setRecords(updatedRecords);
-    localStorage.setItem('auditRecords', JSON.stringify(updatedRecords));
-
-    alert('Fiche enregistrée avec succès !');
-    cancelCreating();
-  };
-
-  // Supprimer une fiche
-  const deleteRecord = (recordId: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cette fiche ?')) return;
-
-    const updatedRecords = records.filter(r => r.id !== recordId);
-    setRecords(updatedRecords);
-    localStorage.setItem('auditRecords', JSON.stringify(updatedRecords));
-  };
+  const {
+    interventions,
+    records,
+    selectedIntervention,
+    selectedProject,
+    formData,
+    fieldComments,
+    isCreating,
+    pendingIntervention,
+    viewingRecord,
+    showNewRecordModal,
+    recordTitle,
+    setSelectedIntervention,
+    setSelectedProject,
+    setFormData,
+    setFieldComments,
+    setIsCreating,
+    setPendingIntervention,
+    setViewingRecord,
+    setShowNewRecordModal,
+    setRecordTitle,
+    cancelCreating,
+    updateFieldValue,
+    updateFieldComment,
+    saveRecord,
+    deleteRecord,
+  } = useRecordCreator();
 
   // Rendre un champ selon son type
   const renderField = (field: OperationField, operationId: string) => {
@@ -466,7 +362,7 @@ export default function RecordCreator() {
               <ArrowLeft className="h-5 w-5 text-slate-600" />
             </button>
             <div>
-              <h2 className="text-2xl font-bold text-slate-900">{selectedIntervention.name}</h2>
+              <h2 className="text-2xl font-bold text-audittab-navy">{selectedIntervention.name}</h2>
               <p className="text-sm text-slate-600">
                 {selectedIntervention.description} • {MOCK_PROJECTS.find(p => p.id === selectedProject)?.name}
               </p>
@@ -485,7 +381,7 @@ export default function RecordCreator() {
         <div className="space-y-6">
           {selectedIntervention.operations.map((operation) => (
             <div key={operation.id} className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-              <h3 className="text-lg font-semibold text-slate-900 mb-1">{operation.name}</h3>
+              <h3 className="text-lg font-semibold text-audittab-navy mb-1">{operation.name}</h3>
               {operation.description && (
                 <p className="text-sm text-slate-600 mb-4">{operation.description}</p>
               )}
@@ -537,7 +433,7 @@ export default function RecordCreator() {
           <div className="bg-white border-b border-slate-200 p-6 sticky top-0 z-10">
             <div className="flex justify-between items-center">
               <div>
-                <h2 className="text-2xl font-bold text-slate-900">{intervention.name}</h2>
+                <h2 className="text-2xl font-bold text-audittab-navy">{intervention.name}</h2>
                 <p className="text-sm text-slate-600">{intervention.description}</p>
                 {viewingRecord.project_name && (
                   <p className="text-sm text-audittab-green font-medium mt-1">
@@ -567,7 +463,7 @@ export default function RecordCreator() {
           <div className="p-6 space-y-6">
             {intervention.operations.map((operation) => (
               <div key={operation.id} className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                <h3 className="text-lg font-semibold text-slate-900 mb-1">{operation.name}</h3>
+                <h3 className="text-lg font-semibold text-audittab-navy mb-1">{operation.name}</h3>
                 {operation.description && (
                   <p className="text-sm text-slate-600 mb-4">{operation.description}</p>
                 )}
@@ -612,7 +508,7 @@ export default function RecordCreator() {
                                 <div className="mt-2 pt-2 border-t border-slate-200">
                                   <p className="text-xs font-medium text-slate-600 mb-1 flex items-center gap-1">
                                     Commentaire :
-                                    <Mic className="h-4 w-4 text-slate-400" title="Commentaire audio disponible" />
+                                    <Mic className="h-4 w-4 text-slate-400" />
                                   </p>
                                   <p className="text-sm text-slate-700 whitespace-pre-wrap">{comment}</p>
                                 </div>
@@ -671,7 +567,7 @@ export default function RecordCreator() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">Mes fiches</h2>
+          <h2 className="text-2xl font-bold text-audittab-navy mb-2">Mes fiches</h2>
           <p className="text-slate-600">Créez et gérez vos fiches d'intervention</p>
         </div>
         <button
@@ -686,7 +582,7 @@ export default function RecordCreator() {
       {/* Liste des fiches créées */}
       {records.length > 0 ? (
         <div>
-          <h3 className="text-lg font-semibold text-slate-900 mb-4">Fiches récentes</h3>
+          <h3 className="text-lg font-semibold text-audittab-navy mb-4">Fiches récentes</h3>
           <div className="space-y-3">
                 {records.map(record => (
                   <div
@@ -740,7 +636,7 @@ export default function RecordCreator() {
               <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckSquare className="h-8 w-8 text-slate-400" />
               </div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">Aucune fiche créée</h3>
+              <h3 className="text-lg font-semibold text-audittab-navy mb-2">Aucune fiche créée</h3>
               <p className="text-slate-600 mb-6">Cliquez sur "Ajouter une fiche" pour commencer</p>
             </div>
           )}
@@ -753,7 +649,7 @@ export default function RecordCreator() {
       {showNewRecordModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-2xl font-bold text-slate-900 mb-6">
+            <h2 className="text-2xl font-bold text-audittab-navy mb-6">
               Nouvelle fiche
             </h2>
             
