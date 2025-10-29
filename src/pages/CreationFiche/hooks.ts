@@ -14,10 +14,8 @@ export function useRecordCreator() {
   const [formData, setFormData] = useState<RecordData>({});
   const [fieldComments, setFieldComments] = useState<FieldComments>({});
   const [isCreating, setIsCreating] = useState(false);
-  const [pendingIntervention, setPendingIntervention] = useState<Intervention | null>(null);
   const [viewingRecord, setViewingRecord] = useState<AuditRecord | null>(null);
   const [showNewRecordModal, setShowNewRecordModal] = useState(false);
-  const [recordTitle, setRecordTitle] = useState<string>('');
 
   // Charger les interventions depuis localStorage
   useEffect(() => {
@@ -117,10 +115,8 @@ export function useRecordCreator() {
     formData,
     fieldComments,
     isCreating,
-    pendingIntervention,
     viewingRecord,
     showNewRecordModal,
-    recordTitle,
 
     // Setters
     setInterventions,
@@ -130,10 +126,8 @@ export function useRecordCreator() {
     setFormData,
     setFieldComments,
     setIsCreating,
-    setPendingIntervention,
     setViewingRecord,
     setShowNewRecordModal,
-    setRecordTitle,
 
     // Methods
     cancelCreating,

@@ -1,4 +1,4 @@
-import { CheckSquare, XSquare, Plus, Trash2, GripVertical, Type, Hash, AlignLeft, CheckCheck, Calendar, Image as ImageIcon, Star, List, Camera, Mic, Paperclip, ChevronUp, ChevronDown, Settings } from 'lucide-react';
+import { CheckSquare, XSquare, Plus, Trash2, GripVertical, Type, Hash, AlignLeft, CheckCheck, Calendar, Image as ImageIcon, Star, List, Camera, Mic, Paperclip, ChevronUp, ChevronDown, Settings, Eye } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { useState, useEffect } from 'react';
 // Injecte l'animation CSS pour l'étoile favoris une seule fois
@@ -43,6 +43,9 @@ export default function InterventionCreator() {
     const stored = localStorage.getItem('favoriteToolboxItems');
     return stored ? JSON.parse(stored) : [];
   });
+
+  // État pour afficher la modal d'aperçu
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
 
   // Sauvegarder les favoris dans localStorage
   const toggleFavoriteTool = (type: FieldType) => {
@@ -291,7 +294,6 @@ export default function InterventionCreator() {
                 className="w-full bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md hover:border-audittab-green transition-all text-left"
               >
                 <h3 className="text-lg font-semibold text-slate-900">{intervention.name}</h3>
-                <p className="text-sm text-slate-600 mt-1">{intervention.description}</p>
                 <div className="flex items-center justify-between mt-4 text-sm text-slate-500">
                   <span>{intervention.operations.length} opération(s)</span>
                   <span>
@@ -360,18 +362,6 @@ export default function InterventionCreator() {
                 value={currentIntervention.name || ''}
                 onChange={(e) => setCurrentIntervention({ ...currentIntervention, name: e.target.value })}
                 placeholder="Ex: Contrôle qualité bâtiment A"
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-audittab-green focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Description
-              </label>
-              <textarea
-                value={currentIntervention.description || ''}
-                onChange={(e) => setCurrentIntervention({ ...currentIntervention, description: e.target.value })}
-                placeholder="Description de l'intervention"
-                rows={3}
                 className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-audittab-green focus:border-transparent"
               />
             </div>
@@ -682,202 +672,235 @@ export default function InterventionCreator() {
           </div>
         </div>
 
-        {/* Aperçu de la fiche */}
+        {/* Bouton d'aperçu de la fiche */}
         {currentIntervention.operations && currentIntervention.operations.length > 0 && (
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            <h3 className="text-lg font-semibold text-slate-900 mb-4">📋 Aperçu de la fiche</h3>
-            <p className="text-sm text-slate-600 mb-4">
-              Voici à quoi ressemblera votre intervention lors du remplissage
-            </p>
-            
-            <div className="space-y-6">
-              {currentIntervention.operations.map((operation) => (
-                <div key={operation.id} className="border border-slate-200 rounded-lg p-4 bg-slate-50">
-                  <h4 className="font-semibold text-slate-900 mb-1">{operation.name || 'Opération sans nom'}</h4>
+          <div className="flex justify-center">
+            <button
+              onClick={() => setShowPreviewModal(true)}
+              className="flex items-center gap-2 px-6 py-3 bg-audittab-green text-white rounded-lg hover:bg-audittab-green-dark transition-colors"
+            >
+              <Eye className="h-5 w-5" />
+              Aperçu de la fiche
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Rendre la modal d'aperçu de l'intervention
+  const renderPreviewModal = () => {
+    if (!showPreviewModal || !currentIntervention) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
+        <div className="bg-slate-50 rounded-xl shadow-xl max-w-4xl w-full mx-4 my-8 max-h-[90vh] overflow-y-auto">
+          {/* En-tête */}
+          <div className="bg-white border-b border-slate-200 p-6 sticky top-0 z-10">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-2xl font-bold text-audittab-navy">Aperçu de l'intervention</h2>
+                <p className="text-sm text-slate-600 mt-1">
+                  {currentIntervention.name || 'Intervention sans nom'}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowPreviewModal(false)}
+                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                <XSquare className="h-6 w-6 text-slate-600" />
+              </button>
+            </div>
+          </div>
+
+          {/* Contenu */}
+          <div className="p-6 space-y-6">
+            {currentIntervention.operations && currentIntervention.operations.length > 0 ? (
+              currentIntervention.operations.map((operation) => (
+                <div key={operation.id} className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                  <h3 className="text-lg font-semibold text-audittab-navy mb-1">{operation.name}</h3>
                   {operation.description && (
-                    <p className="text-sm text-slate-600 mb-3">{operation.description}</p>
+                    <p className="text-sm text-slate-600 mb-4">{operation.description}</p>
                   )}
-                  
-                  {operation.fields.length > 0 ? (
-                    <div className="space-y-3">
-                      {operation.fields.map((field) => {
-                        const toolboxItem = allToolboxItems.find(t => t.type === field.type);
-                        const Icon = toolboxItem?.icon || Type;
-                        
-                        return (
-                          <div key={field.id} className="border-l-4 border-audittab-green pl-3 bg-white p-3 rounded">
-                            <div className="flex items-start gap-2 mb-2">
-                              <Icon className="h-4 w-4 text-audittab-green mt-0.5" />
-                              <label className="block text-sm font-medium text-slate-900">
-                                {field.label || 'Champ sans nom'}
-                                {field.required && <span className="text-red-600 ml-1">*</span>}
-                              </label>
-                            </div>
-                            {field.description && (
-                              <p className="text-xs text-slate-500 mb-2 ml-6">{field.description}</p>
-                            )}
-                            
-                            {/* Aperçu selon le type de champ */}
-                            <div className="ml-6">
-                              {field.type === 'checkpoint' && (
-                                <div className="space-y-2">
-                                  <div className="flex gap-2 text-xs">
-                                    <span className="px-3 py-1.5 bg-green-100 text-green-700 rounded border border-green-200">✓ Conforme</span>
-                                    <span className="px-3 py-1.5 bg-slate-200 text-slate-700 rounded border border-slate-300">− N/A</span>
-                                    <span className="px-3 py-1.5 bg-red-100 text-red-700 rounded border border-red-200">✗ Non conforme</span>
-                                  </div>
+
+                  <div className="space-y-4">
+                    {operation.fields.map((field) => {
+                      const toolboxItem = allToolboxItems.find(t => t.type === field.type);
+                      const Icon = toolboxItem?.icon || Type;
+
+                      return (
+                        <div key={field.id} className="border-l-4 border-audittab-green pl-4 pr-4 py-3 rounded-lg bg-slate-50">
+                          <div className="flex items-start gap-2 mb-2">
+                            <Icon className="h-4 w-4 text-audittab-green mt-0.5" />
+                            <label className="block text-sm font-medium text-slate-900">
+                              {field.label || 'Champ sans nom'}
+                              {field.required && <span className="text-red-600 ml-1">*</span>}
+                            </label>
+                          </div>
+                          {field.description && (
+                            <p className="text-xs text-slate-500 mb-2 ml-6">{field.description}</p>
+                          )}
+
+                          {/* Aperçu selon le type de champ */}
+                          <div className="ml-6">
+                            {field.type === 'checkpoint' && (
+                              <div className="space-y-2">
+                                <div className="flex gap-2 text-xs">
+                                  <span className="px-3 py-1.5 bg-green-100 text-green-700 rounded border border-green-200">✓ Conforme</span>
+                                  <span className="px-3 py-1.5 bg-slate-200 text-slate-700 rounded border border-slate-300">− N/A</span>
+                                  <span className="px-3 py-1.5 bg-red-100 text-red-700 rounded border border-red-200">✗ Non conforme</span>
+                                </div>
+                                <div className="relative">
                                   <textarea
                                     placeholder="Commentaire..."
                                     rows={2}
-                                    className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded bg-white"
+                                    className="w-full px-3 py-1.5 pr-10 text-xs border border-slate-300 rounded bg-white"
                                     disabled
                                   />
-                                  <div className="flex justify-end gap-2">
-                                    <button className="p-1.5 text-slate-400 bg-slate-100 rounded" disabled>
-                                      <Camera className="h-4 w-4" />
-                                    </button>
-                                    <button className="p-1.5 text-slate-400 bg-slate-100 rounded" disabled>
-                                      <Paperclip className="h-4 w-4" />
-                                    </button>
-                                  </div>
+                                  <button className="absolute right-2 top-2 p-1 text-slate-400 bg-slate-100 rounded" disabled>
+                                    <Mic className="h-4 w-4" />
+                                  </button>
                                 </div>
-                              )}
-                              {field.type === 'text' && (
-                                <div className="space-y-2">
-                                  <div className="relative">
-                                    <input type="text" placeholder="Exemple de texte..." className="w-full px-3 py-1.5 pr-10 text-sm border border-slate-300 rounded bg-white" disabled />
-                                    <button className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 bg-slate-100 rounded" disabled>
-                                      <Mic className="h-4 w-4" />
-                                    </button>
-                                  </div>
-                                  <div className="flex justify-end gap-2">
-                                    <button className="p-1.5 text-slate-400 bg-slate-100 rounded" disabled>
-                                      <Camera className="h-4 w-4" />
-                                    </button>
-                                    <button className="p-1.5 text-slate-400 bg-slate-100 rounded" disabled>
-                                      <Paperclip className="h-4 w-4" />
-                                    </button>
-                                  </div>
+                                <div className="flex justify-end gap-2">
+                                  <button className="p-1.5 text-slate-400 bg-slate-100 rounded" disabled>
+                                    <Camera className="h-4 w-4" />
+                                  </button>
+                                  <button className="p-1.5 text-slate-400 bg-slate-100 rounded" disabled>
+                                    <Paperclip className="h-4 w-4" />
+                                  </button>
                                 </div>
-                              )}
-                              {field.type === 'textarea' && (
-                                <div className="space-y-2">
-                                  <div className="relative">
-                                    <textarea placeholder="Exemple de texte long..." rows={2} className="w-full px-3 py-1.5 pr-10 text-sm border border-slate-300 rounded bg-white" disabled />
-                                    <button className="absolute right-2 top-2 p-1 text-slate-400 bg-slate-100 rounded" disabled>
-                                      <Mic className="h-4 w-4" />
-                                    </button>
-                                  </div>
-                                  <div className="flex justify-end gap-2">
-                                    <button className="p-1.5 text-slate-400 bg-slate-100 rounded" disabled>
-                                      <Camera className="h-4 w-4" />
-                                    </button>
-                                    <button className="p-1.5 text-slate-400 bg-slate-100 rounded" disabled>
-                                      <Paperclip className="h-4 w-4" />
-                                    </button>
-                                  </div>
+                              </div>
+                            )}
+                            {field.type === 'text' && (
+                              <div className="space-y-2">
+                                <div className="relative">
+                                  <input type="text" placeholder="Exemple de texte..." className="w-full px-3 py-1.5 pr-10 text-sm border border-slate-300 rounded bg-white" disabled />
+                                  <button className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 bg-slate-100 rounded" disabled>
+                                    <Mic className="h-4 w-4" />
+                                  </button>
                                 </div>
-                              )}
-                              {field.type === 'number' && (
-                                <div className="space-y-2">
-                                  <input type="number" placeholder="123" className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded bg-white" disabled />
-                                  <div className="flex justify-end gap-2">
-                                    <button className="p-1.5 text-slate-400 bg-slate-100 rounded" disabled>
-                                      <Camera className="h-4 w-4" />
-                                    </button>
-                                    <button className="p-1.5 text-slate-400 bg-slate-100 rounded" disabled>
-                                      <Paperclip className="h-4 w-4" />
-                                    </button>
-                                  </div>
+                                <div className="flex justify-end gap-2">
+                                  <button className="p-1.5 text-slate-400 bg-slate-100 rounded" disabled>
+                                    <Camera className="h-4 w-4" />
+                                  </button>
+                                  <button className="p-1.5 text-slate-400 bg-slate-100 rounded" disabled>
+                                    <Paperclip className="h-4 w-4" />
+                                  </button>
                                 </div>
-                              )}
-                              {field.type === 'select' && (
-                                <div className="space-y-2">
-                                  <select className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded bg-white" disabled>
-                                    <option>Sélectionner...</option>
-                                    {(field.options || []).map(opt => (
-                                      <option key={opt.id}>{opt.label || 'Option'}</option>
-                                    ))}
-                                  </select>
-                                  {field.options && field.options.length > 0 && (
-                                    <div className="text-xs text-slate-500">
-                                      Options : {field.options.map(opt => opt.label).join(', ')}
-                                    </div>
-                                  )}
-                                  <div className="flex justify-end gap-2">
-                                    <button className="p-1.5 text-slate-400 bg-slate-100 rounded" disabled>
-                                      <Camera className="h-4 w-4" />
-                                    </button>
-                                    <button className="p-1.5 text-slate-400 bg-slate-100 rounded" disabled>
-                                      <Paperclip className="h-4 w-4" />
-                                    </button>
-                                  </div>
+                              </div>
+                            )}
+                            {field.type === 'textarea' && (
+                              <div className="space-y-2">
+                                <div className="relative">
+                                  <textarea placeholder="Exemple de texte long..." rows={2} className="w-full px-3 py-1.5 pr-10 text-sm border border-slate-300 rounded bg-white" disabled />
+                                  <button className="absolute right-2 top-2 p-1 text-slate-400 bg-slate-100 rounded" disabled>
+                                    <Mic className="h-4 w-4" />
+                                  </button>
                                 </div>
-                              )}
-                              {field.type === 'checkbox' && (
-                                <div className="space-y-2">
-                                  <div className="flex gap-2 text-xs">
-                                    <span className="px-3 py-1.5 bg-green-100 text-green-700 rounded border border-green-200">✓ Oui</span>
-                                    <span className="px-3 py-1.5 bg-red-100 text-red-700 rounded border border-red-200">✗ Non</span>
-                                  </div>
-                                  <div className="flex justify-end gap-2">
-                                    <button className="p-1.5 text-slate-400 bg-slate-100 rounded" disabled>
-                                      <Camera className="h-4 w-4" />
-                                    </button>
-                                    <button className="p-1.5 text-slate-400 bg-slate-100 rounded" disabled>
-                                      <Paperclip className="h-4 w-4" />
-                                    </button>
-                                  </div>
+                                <div className="flex justify-end gap-2">
+                                  <button className="p-1.5 text-slate-400 bg-slate-100 rounded" disabled>
+                                    <Camera className="h-4 w-4" />
+                                  </button>
+                                  <button className="p-1.5 text-slate-400 bg-slate-100 rounded" disabled>
+                                    <Paperclip className="h-4 w-4" />
+                                  </button>
                                 </div>
-                              )}
-                              {field.type === 'rating' && (
-                                <div className="space-y-2">
-                                  <div className="flex gap-1">
-                                    {[1, 2, 3, 4, 5].map(i => (
-                                      <Star key={i} className="h-5 w-5 text-yellow-400 fill-yellow-400" />
-                                    ))}
-                                  </div>
-                                  <div className="flex justify-end gap-2">
-                                    <button className="p-1.5 text-slate-400 bg-slate-100 rounded" disabled>
-                                      <Camera className="h-4 w-4" />
-                                    </button>
-                                    <button className="p-1.5 text-slate-400 bg-slate-100 rounded" disabled>
-                                      <Paperclip className="h-4 w-4" />
-                                    </button>
-                                  </div>
+                              </div>
+                            )}
+                            {field.type === 'number' && (
+                              <div className="space-y-2">
+                                <input type="number" placeholder="123" className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded bg-white" disabled />
+                                <div className="flex justify-end gap-2">
+                                  <button className="p-1.5 text-slate-400 bg-slate-100 rounded" disabled>
+                                    <Camera className="h-4 w-4" />
+                                  </button>
+                                  <button className="p-1.5 text-slate-400 bg-slate-100 rounded" disabled>
+                                    <Paperclip className="h-4 w-4" />
+                                  </button>
                                 </div>
-                              )}
-                              {field.type === 'date' && (
-                                <div className="space-y-2">
-                                  <input type="date" className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded bg-white" disabled />
-                                  <div className="flex justify-end gap-2">
-                                    <button className="p-1.5 text-slate-400 bg-slate-100 rounded" disabled>
-                                      <Camera className="h-4 w-4" />
-                                    </button>
-                                    <button className="p-1.5 text-slate-400 bg-slate-100 rounded" disabled>
-                                      <Paperclip className="h-4 w-4" />
-                                    </button>
-                                  </div>
+                              </div>
+                            )}
+                            {field.type === 'rating' && (
+                              <div className="flex items-center gap-1 mb-2">
+                                {[1, 2, 3, 4, 5].map(star => (
+                                  <Star key={star} className="h-5 w-5 text-slate-300" />
+                                ))}
+                                <span className="ml-2 text-sm text-slate-500">0/5</span>
+                              </div>
+                            )}
+                            {field.type === 'checkbox' && (
+                              <div className="space-y-2">
+                                <div className="flex gap-2 text-xs">
+                                  <span className="px-3 py-1.5 bg-green-100 text-green-700 rounded border border-green-200">✓ Oui</span>
+                                  <span className="px-3 py-1.5 bg-red-100 text-red-700 rounded border border-red-200">✗ Non</span>
                                 </div>
-                              )}
-                              {field.type === 'photo' && (
-                                <button className="px-3 py-1.5 text-sm bg-slate-200 text-slate-700 rounded flex items-center gap-2" disabled>
-                                  <Camera className="h-4 w-4" /> Prendre une photo
+                                <div className="flex justify-end gap-2">
+                                  <button className="p-1.5 text-slate-400 bg-slate-100 rounded" disabled>
+                                    <Camera className="h-4 w-4" />
+                                  </button>
+                                  <button className="p-1.5 text-slate-400 bg-slate-100 rounded" disabled>
+                                    <Paperclip className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                            {field.type === 'date' && (
+                              <div className="space-y-2">
+                                <input type="date" className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded bg-white" disabled />
+                                <div className="flex justify-end gap-2">
+                                  <button className="p-1.5 text-slate-400 bg-slate-100 rounded" disabled>
+                                    <Camera className="h-4 w-4" />
+                                  </button>
+                                  <button className="p-1.5 text-slate-400 bg-slate-100 rounded" disabled>
+                                    <Paperclip className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                            {field.type === 'photo' && (
+                              <div className="space-y-2">
+                                <button className="px-4 py-2 bg-slate-100 text-slate-600 rounded text-sm" disabled>
+                                  📷 Prendre une photo
                                 </button>
-                              )}
-                            </div>
+                              </div>
+                            )}
+                            {field.type === 'select' && (
+                              <div className="space-y-2">
+                                <select className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded bg-white" disabled>
+                                  <option>Sélectionner...</option>
+                                  {(field.options || []).map(opt => (
+                                    <option key={opt.id}>{opt.label || 'Option'}</option>
+                                  ))}
+                                </select>
+                                {field.options && field.options.length > 0 && (
+                                  <div className="text-xs text-slate-500">
+                                    Options : {field.options.map(opt => opt.label).join(', ')}
+                                  </div>
+                                )}
+                                <div className="flex justify-end gap-2">
+                                  <button className="p-1.5 text-slate-400 bg-slate-100 rounded" disabled>
+                                    <Camera className="h-4 w-4" />
+                                  </button>
+                                  <button className="p-1.5 text-slate-400 bg-slate-100 rounded" disabled>
+                                    <Paperclip className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              </div>
+                            )}
                           </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-slate-500 italic">Aucun champ dans cette opération</p>
-                  )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              ))}
-            </div>
+              ))
+            ) : (
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 text-center">
+                <p className="text-slate-500">Aucune opération dans cette intervention</p>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     );
   };
@@ -887,6 +910,8 @@ export default function InterventionCreator() {
       <div className="max-w-7xl mx-auto p-6">
         {isCreating ? renderCreator() : renderInterventionsList()}
       </div>
+      {/* Modal d'aperçu */}
+      {renderPreviewModal()}
     </div>
   );
 }

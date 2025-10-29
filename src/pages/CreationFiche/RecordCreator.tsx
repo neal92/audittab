@@ -1,7 +1,6 @@
-import { CheckSquare, XSquare, Minus, Camera, ArrowLeft, Save, Paperclip, Mic, Star, Plus } from 'lucide-react';
+import { CheckSquare, XSquare, Minus, Camera, ArrowLeft, Save, Paperclip, Mic, Star, Plus, Trash } from 'lucide-react';
 import { OperationField } from '../../lib/types';
 import { useRecordCreator } from './hooks';
-import { MOCK_PROJECTS } from './data';
 
 /**
  * Composant pour créer et remplir des fiches basées sur des interventions
@@ -15,19 +14,15 @@ export default function RecordCreator() {
     formData,
     fieldComments,
     isCreating,
-    pendingIntervention,
     viewingRecord,
     showNewRecordModal,
-    recordTitle,
     setSelectedIntervention,
     setSelectedProject,
     setFormData,
     setFieldComments,
     setIsCreating,
-    setPendingIntervention,
     setViewingRecord,
     setShowNewRecordModal,
-    setRecordTitle,
     cancelCreating,
     updateFieldValue,
     updateFieldComment,
@@ -362,9 +357,13 @@ export default function RecordCreator() {
               <ArrowLeft className="h-5 w-5 text-slate-600" />
             </button>
             <div>
-              <h2 className="text-2xl font-bold text-audittab-navy">{selectedIntervention.name}</h2>
+              <h2 className="text-2xl font-bold text-audittab-navy">{(() => {
+                const existingRecordsCount = records.filter(record => record.intervention_id === selectedIntervention.id).length;
+                const currentNumber = existingRecordsCount + 1;
+                const formattedNumber = currentNumber.toString().padStart(3, '0');
+                return `${selectedIntervention.name} - ProjetParis - ${formattedNumber}`;
+              })()}</h2>
               <p className="text-sm text-slate-600">
-                {selectedIntervention.description} • {MOCK_PROJECTS.find(p => p.id === selectedProject)?.name}
               </p>
             </div>
           </div>
@@ -432,14 +431,16 @@ export default function RecordCreator() {
           {/* En-tête */}
           <div className="bg-white border-b border-slate-200 p-6 sticky top-0 z-10">
             <div className="flex justify-between items-center">
+
               <div>
-                <h2 className="text-2xl font-bold text-audittab-navy">{intervention.name}</h2>
-                <p className="text-sm text-slate-600">{intervention.description}</p>
-                {viewingRecord.project_name && (
-                  <p className="text-sm text-audittab-green font-medium mt-1">
-                    📁 {viewingRecord.project_name}
-                  </p>
-                )}
+                <h2 className="text-2xl font-bold text-audittab-navy">{(() => {
+                  const interventionRecords = records.filter(r => r.intervention_id === viewingRecord.intervention_id);
+                  const recordIndex = interventionRecords.findIndex(r => r.id === viewingRecord.id) + 1;
+                  const formattedNumber = recordIndex.toString().padStart(3, '0');
+                  return `${intervention.name}_ProjetParis_${formattedNumber}`;
+                  })()}
+                </h2>
+
                 <p className="text-xs text-slate-500 mt-2">
                   Créée le {new Date(viewingRecord.created_at).toLocaleDateString('fr-FR', {
                     day: 'numeric',
@@ -449,7 +450,9 @@ export default function RecordCreator() {
                     minute: '2-digit'
                   })}
                 </p>
+
               </div>
+
               <button
                 onClick={() => setViewingRecord(null)}
                 className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
@@ -583,55 +586,63 @@ export default function RecordCreator() {
       {records.length > 0 ? (
         <div>
           <h3 className="text-lg font-semibold text-audittab-navy mb-4">Fiches récentes</h3>
-          <div className="space-y-3">
+          <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-slate-50 border-b border-slate-200">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Titre</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Projet</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Date de création</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Statut</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200">
                 {records.map(record => (
-                  <div
-                    key={record.id}
-                    className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 hover:shadow-md transition-shadow"
-                  >
-                    <div 
-                      className="flex justify-between items-center cursor-pointer"
-                      onClick={() => setViewingRecord(record)}
-                    >
-                      <div>
-                        <h4 className="font-medium text-slate-900">{record.intervention_name}</h4>
-                        {record.project_name && (
-                          <p className="text-sm text-audittab-green font-medium">📁 {record.project_name}</p>
-                        )}
-                        <p className="text-sm text-slate-500">
-                          {new Date(record.created_at).toLocaleDateString('fr-FR', {
-                            day: 'numeric',
-                            month: 'long',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className={`px-3 py-1 text-xs font-medium rounded-full ${
-                          record.completed 
-                            ? 'bg-green-100 text-green-700' 
-                            : 'bg-red-100 text-red-700'
-                        }`}>
-                          {record.completed ? 'Conforme' : 'Non conforme'}
-                        </span>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteRecord(record.id);
-                          }}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        >
-                          <XSquare className="h-5 w-5" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+                  <tr key={record.id} className="hover:bg-slate-50 cursor-pointer" onClick={() => setViewingRecord(record)}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{(() => {
+                      const interventionRecords = records.filter(r => r.intervention_id === record.intervention_id);
+                      const recordIndex = interventionRecords.findIndex(r => r.id === record.id) + 1;
+                      const formattedNumber = recordIndex.toString().padStart(3, '0');
+                      return `${record.intervention_name}_ProjetParis_${formattedNumber}`;
+                    })()}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{record.project_name || '-'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                      {new Date(record.created_at).toLocaleDateString('fr-FR', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                        record.completed 
+                          ? 'bg-green-100 text-green-700' 
+                          : 'bg-red-100 text-red-700'
+                      }`}>
+                        {record.completed ? 'Conforme' : 'Non conforme'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteRecord(record.id);
+                        }}
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        <Trash className="h-5 w-5" />
+                      </button>
+                    </td>
+                  </tr>
                 ))}
-              </div>
-            </div>
-          ) : (
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : (
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
               <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckSquare className="h-8 w-8 text-slate-400" />
@@ -653,128 +664,60 @@ export default function RecordCreator() {
               Nouvelle fiche
             </h2>
             
-            {/* Étape 1: Titre de la fiche */}
-            {!pendingIntervention && (
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-slate-900 mb-2">
-                    Donnez un titre à votre fiche *
-                  </label>
-                  <input
-                    type="text"
-                    value={recordTitle}
-                    onChange={(e) => setRecordTitle(e.target.value)}
-                    placeholder="Ex: Inspection chantier A - 25/10/2025"
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-audittab-green focus:border-transparent"
-                    autoFocus
-                  />
-                </div>
-
-                {/* Liste des interventions */}
-                {recordTitle.trim() && (
-                  <div>
-                    <label className="block text-sm font-medium text-slate-900 mb-3">
-                      Sélectionnez une intervention
-                    </label>
-                    {interventions.length === 0 ? (
-                      <div className="bg-slate-50 rounded-lg p-6 text-center">
-                        <p className="text-slate-600">Aucune intervention disponible</p>
-                        <p className="text-sm text-slate-500 mt-2">Créez d'abord une intervention dans l'onglet "Mes interventions"</p>
-                      </div>
-                    ) : (
-                      <div className="grid gap-3 max-h-96 overflow-y-auto">
-                        {interventions.map(intervention => (
-                          <button
-                            key={intervention.id}
-                            onClick={() => {
-                              setPendingIntervention(intervention);
-                            }}
-                            className="bg-slate-50 border-2 border-slate-200 rounded-lg p-4 hover:border-audittab-green hover:bg-white transition-all text-left"
-                          >
-                            <h4 className="font-semibold text-slate-900 mb-1">{intervention.name}</h4>
-                            <p className="text-sm text-slate-600 mb-2">{intervention.description}</p>
-                            <div className="text-xs text-slate-500">
-                              {intervention.operations.length} opération(s)
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    )}
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-slate-900 mb-3">
+                  Sélectionnez une intervention
+                </label>
+                {interventions.length === 0 ? (
+                  <div className="bg-slate-50 rounded-lg p-6 text-center">
+                    <p className="text-slate-600">Aucune intervention disponible</p>
+                    <p className="text-sm text-slate-500 mt-2">Créez d'abord une intervention dans l'onglet "Mes interventions"</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-3 max-h-96 overflow-y-auto">
+                    {interventions.map(intervention => (
+                      <button
+                        key={intervention.id}
+                        onClick={() => {
+                          setSelectedIntervention(intervention);
+                          setSelectedProject('1'); // ID du projet Paris
+                          setFormData({});
+                          setFieldComments({});
+                          setIsCreating(true);
+                          setShowNewRecordModal(false);
+                        }}
+                        className="bg-slate-50 border-2 border-slate-200 rounded-lg p-4 hover:border-audittab-green hover:bg-white transition-all text-left"
+                      >
+                        <h4 className="font-semibold text-slate-900 mb-1">{intervention.name}</h4>
+                        <div className="text-xs text-slate-500">
+                          {intervention.operations.length} opération(s)
+                        </div>
+                        <div className="text-xs text-slate-400 mt-1">
+                          Titre généré : {(() => {
+                            const existingRecordsCount = records.filter(record => record.intervention_id === intervention.id).length;
+                            const nextNumber = existingRecordsCount + 1;
+                            const formattedNumber = nextNumber.toString().padStart(3, '0');
+                            return `${intervention.name} - ProjetParis - ${formattedNumber}`;
+                          })()}
+                        </div>
+                      </button>
+                    ))}
                   </div>
                 )}
-
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => {
-                      setShowNewRecordModal(false);
-                      setRecordTitle('');
-                    }}
-                    className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
-                  >
-                    Annuler
-                  </button>
-                </div>
               </div>
-            )}
 
-            {/* Étape 2: Sélection du projet */}
-            {pendingIntervention && (
-              <div className="space-y-6">
-                <div className="bg-slate-50 rounded-lg p-4 mb-4">
-                  <p className="text-sm text-slate-600">Titre de la fiche :</p>
-                  <p className="font-semibold text-slate-900">{recordTitle}</p>
-                  <p className="text-sm text-slate-600 mt-2">Intervention :</p>
-                  <p className="font-medium text-slate-900">{pendingIntervention.name}</p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-900 mb-2">
-                    Projet *
-                  </label>
-                  <select
-                    value={selectedProject}
-                    onChange={(e) => setSelectedProject(e.target.value)}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-audittab-green focus:border-transparent"
-                  >
-                    <option value="">-- Sélectionner un projet --</option>
-                    {MOCK_PROJECTS.map(project => (
-                      <option key={project.id} value={project.id}>
-                        {project.name} - {project.description}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => {
-                      setPendingIntervention(null);
-                      setSelectedProject('');
-                    }}
-                    className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
-                  >
-                    Retour
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (selectedProject && pendingIntervention) {
-                        setSelectedIntervention(pendingIntervention);
-                        setFormData({});
-                        setFieldComments({});
-                        setIsCreating(true);
-                        setShowNewRecordModal(false);
-                        setRecordTitle('');
-                        setPendingIntervention(null);
-                      }
-                    }}
-                    disabled={!selectedProject}
-                    className="flex-1 px-4 py-2 bg-audittab-green text-white rounded-lg hover:bg-audittab-green-dark transition-colors disabled:bg-slate-300 disabled:cursor-not-allowed"
-                  >
-                    Commencer
-                  </button>
-                </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowNewRecordModal(false);
+                  }}
+                  className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+                >
+                  Annuler
+                </button>
               </div>
-            )}
+            </div>
           </div>
         </div>
       )}
