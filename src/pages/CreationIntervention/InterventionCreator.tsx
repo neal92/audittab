@@ -18,7 +18,10 @@ import {
   ChevronUp,
   ChevronDown,
   Settings,
-  Eye
+  Eye,
+  Sparkles,
+  ArrowLeft,
+  Loader2
 } from '../../lib/icons';
 import { v4 as uuidv4 } from 'uuid';
 import { useState, useEffect } from 'react';
@@ -35,6 +38,52 @@ if (typeof window !== 'undefined' && !document.head.querySelector('style[data-fa
     30% { transform: scale(1.3) rotate(-15deg); }
     60% { transform: scale(0.9) rotate(10deg); }
     100% { transform: scale(1) rotate(0deg); }
+  }
+  
+  .ai-button-anim {
+    animation: ai-shine 3s ease-in-out infinite;
+  }
+  @keyframes ai-shine {
+    0%, 100% { 
+      box-shadow: 0 0 5px rgba(59, 130, 246, 0.3), 0 0 10px rgba(59, 130, 246, 0.2);
+      filter: brightness(1) saturate(1);
+      transform: scale(1);
+    }
+    50% { 
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.8), 0 0 40px rgba(59, 130, 246, 0.6), 0 0 60px rgba(59, 130, 246, 0.4);
+      filter: brightness(1.2) saturate(1.3);
+      transform: scale(1.05);
+    }
+  }
+  
+  .glossy-shine {
+    position: relative;
+    overflow: hidden;
+  }
+  .glossy-shine::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.4),
+      transparent
+    );
+    animation: shine 3s ease-in-out infinite;
+  }
+  @keyframes shine {
+    0% { left: -100%; }
+    100% { left: 100%; }
+  }
+  
+  @keyframes progress {
+    0% { width: 0%; }
+    50% { width: 100%; }
+    100% { width: 0%; }
   }
   `;
   style.setAttribute('data-fav-anim', 'true');
@@ -66,6 +115,11 @@ export default function InterventionCreator() {
     return stored ? JSON.parse(stored) : [];
   });
 
+  // État pour afficher le tooltip IA
+  const [showAITooltip, setShowAITooltip] = useState(false);
+  // Génération en cours - progression et résultat
+  const [generationProgress, setGenerationProgress] = useState(0);
+  const [generationResult, setGenerationResult] = useState<{ count: number; message?: string } | null>(null);
   // État pour afficher la modal d'aperçu
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   // État pour l'IA (modal prompt, loading, erreur)
@@ -192,75 +246,269 @@ export default function InterventionCreator() {
   const renderAIModal = () => {
     if (!showAIModal) return null;
 
+    const promptSuggestions = [
+      "Créer une intervention pour un contrôle technique d'un véhicule avec vérification des freins, des feux et du moteur",
+      "Intervention de maintenance préventive pour un système électrique avec test des connexions et mesure des tensions",
+      "Contrôle qualité pour un produit manufacturé avec inspection visuelle et mesures dimensionnelles",
+      "Audit de sécurité d'un bâtiment avec vérification des issues de secours et des équipements de protection"
+    ];
+
+    const handleSuggestionClick = (suggestion: string) => {
+      setAiPrompt(suggestion);
+      // Extraire le titre de la suggestion (tout ce qui vient après "Créer une intervention pour" ou utiliser la suggestion complète)
+      let title = suggestion;
+      if (suggestion.startsWith("Créer une intervention pour")) {
+        title = suggestion.replace("Créer une intervention pour", "").trim();
+        // Capitaliser la première lettre
+        title = title.charAt(0).toUpperCase() + title.slice(1);
+      } else if (suggestion.startsWith("Intervention de")) {
+        title = suggestion;
+      } else if (suggestion.startsWith("Contrôle")) {
+        title = suggestion;
+      } else if (suggestion.startsWith("Audit")) {
+        title = suggestion;
+      }
+      // Mettre à jour le nom de l'intervention
+      if (currentIntervention) {
+        setCurrentIntervention({
+          ...currentIntervention,
+          name: title
+        });
+      }
+    };
+
     const onGenerate = async () => {
       setAiError(null);
+      setGenerationProgress(0);
+      setGenerationResult(null);
       setAiLoading(true);
-        try {
-          // Prefer local generate_sheet_ia parser/webhook wrapper which matches your external scripts
-          const result = await generateStructureFromPrompt(aiPrompt, currentIntervention || undefined);
-          const ops = result?.operations || [];
-          if (ops && ops.length > 0) {
-            const operations: Operation[] = ops.map((op: any) => ({
-              id: op.id || uuidv4(),
-              name: op.name || 'Opération générée',
-              description: op.description || '',
-              fields: (op.fields || []).map((f: any) => ({
-                id: f.id || uuidv4(),
-                type: f.type || 'text',
-                label: f.label || 'Champ',
-                description: f.description || '',
-                required: !!f.required,
-                options: Array.isArray(f.options) ? f.options.map((o: any) => ({ id: uuidv4(), label: o.label || o })) : undefined,
-              })),
-            }));
 
-            setCurrentIntervention({
-              ...currentIntervention,
-              operations: [...(currentIntervention?.operations || []), ...operations],
-            });
-            setShowAIModal(false);
-            setAiPrompt('');
-          } else {
-            setAiError('Réponse IA invalide — aucune opération trouvée.');
-          }
-        } catch (err: any) {
-          setAiError(err?.message || 'Erreur lors de la génération IA');
-        } finally {
-          setAiLoading(false);
+      // Start a fake-ish progress ticker that will climb while the request runs.
+      let progress = 0;
+      let timer: any = null;
+      timer = setInterval(() => {
+        // increase progress with small random jumps up to 95%
+        progress = Math.min(95, progress + Math.floor(Math.random() * 8) + 3);
+        setGenerationProgress(Math.round(progress));
+      }, 400);
+
+      try {
+        // Prefer local generate_sheet_ia parser/webhook wrapper which matches your external scripts
+        const result = await generateStructureFromPrompt(aiPrompt, currentIntervention || undefined);
+        const ops = result?.operations || [];
+        clearInterval(timer);
+        setGenerationProgress(100);
+
+        if (ops && ops.length > 0) {
+          const operations: Operation[] = ops.map((op: any) => ({
+            id: op.id || uuidv4(),
+            name: op.name || 'Opération générée',
+            description: op.description || '',
+            fields: (op.fields || []).map((f: any) => ({
+              id: f.id || uuidv4(),
+              type: f.type || 'text',
+              label: f.label || 'Champ',
+              description: f.description || '',
+              required: !!f.required,
+              options: Array.isArray(f.options) ? f.options.map((o: any) => ({ id: uuidv4(), label: o.label || o })) : undefined,
+            })),
+          }));
+
+          setCurrentIntervention({
+            ...currentIntervention,
+            operations: [...(currentIntervention?.operations || []), ...operations],
+          });
+
+          // Keep the IA modal closed and show a success popup with number of ops
+          setShowAIModal(false);
+          setAiPrompt('');
+          setGenerationResult({ count: operations.length, message: `${operations.length} opérations créées` });
+        } else {
+          setAiError('Réponse IA invalide — aucune opération trouvée.');
+          setGenerationResult({ count: 0, message: 'Aucune opération créée' });
         }
+      } catch (err: any) {
+        clearInterval(timer);
+        setGenerationProgress(100);
+        setAiError(err?.message || 'Erreur lors de la génération IA');
+        setGenerationResult({ count: 0, message: 'Erreur lors de la génération' });
+      } finally {
+        clearInterval(timer);
+        setAiLoading(false);
+      }
     };
 
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">Génération IA</h3>
-            <button onClick={() => setShowAIModal(false)} className="p-1.5 rounded hover:bg-slate-100">
-              <XSquare className="h-5 w-5 text-slate-600" />
-            </button>
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-audittab-navy to-audittab-navy-700 text-white p-6">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white bg-opacity-20 rounded-lg">
+                  <Sparkles className="h-6 w-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold">Assistant IA - Génération d'intervention</h3>
+                  <p className="text-sm text-slate-200 mt-1">Décrivez votre intervention et laissez l'IA créer la structure</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowAIModal(false)}
+                className="p-2 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors"
+              >
+                <XSquare className="h-5 w-5" />
+              </button>
+            </div>
           </div>
 
-          <label className="block text-sm text-slate-600 mb-2">Prompt</label>
-          <textarea
-            value={aiPrompt}
-            onChange={(e) => setAiPrompt(e.target.value)}
-            rows={5}
-            className="w-full border border-slate-200 rounded px-3 py-2 mb-3"
-            placeholder="Décris le type d'intervention et les opérations/champs souhaités..."
-          />
+          {/* Content */}
+          <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+            {/* Tips Section */}
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+              <div className="flex items-start gap-3">
+                <div className="p-1 bg-blue-100 rounded-lg">
+                  <Sparkles className="h-4 w-4 text-blue-600" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-blue-900 mb-2">💡 Conseils pour un meilleur résultat</h4>
+                  <ul className="text-sm text-blue-800 space-y-1">
+                    <li>• Soyez spécifique sur le type d'intervention (maintenance, contrôle, audit...)</li>
+                    <li>• Mentionnez les équipements ou systèmes concernés</li>
+                    <li>• Précisez les types de vérifications ou mesures à effectuer</li>
+                    <li>• Indiquez si certains champs sont obligatoires</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
 
-          {aiError && <div className="text-sm text-red-600 mb-2">{aiError}</div>}
+            {/* Prompt Input */}
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-slate-700 mb-3">
+                Décrivez votre intervention
+              </label>
+              <textarea
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                rows={6}
+                className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-audittab-green focus:ring-2 focus:ring-audittab-green focus:ring-opacity-20 transition-all resize-none"
+                placeholder="Exemple: Créer une intervention pour l'inspection mensuelle d'un extincteur avec vérification de la pression, du sceau et de l'accessibilité..."
+              />
+              <div className="text-xs text-slate-500 mt-2">
+                {aiPrompt.length}/1000 caractères
+              </div>
+            </div>
 
-          <div className="flex justify-end gap-3">
-            <button onClick={() => setShowAIModal(false)} className="px-4 py-2 rounded border border-slate-200">Annuler</button>
-            <button
-              onClick={onGenerate}
-              disabled={aiLoading || !aiPrompt.trim()}
-              className="px-4 py-2 bg-audittab-green text-white rounded-lg hover:bg-audittab-green-dark transition-colors disabled:opacity-60"
-            >
-              {aiLoading ? 'Génération...' : 'Générer'}
-            </button>
+            {/* Suggestions */}
+            <div className="mb-6">
+              <h4 className="text-sm font-semibold text-slate-700 mb-3">📝 Exemples de prompts</h4>
+              <div className="grid gap-3">
+                {promptSuggestions.map((suggestion, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleSuggestionClick(suggestion)}
+                    className="text-left p-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors group"
+                  >
+                    <div className="text-sm text-slate-700 group-hover:text-slate-900">
+                      {suggestion}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Error Message */}
+            {aiError && (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
+                <div className="flex items-center gap-2 text-red-800">
+                  <XSquare className="h-4 w-4" />
+                  <span className="text-sm font-medium">Erreur de génération</span>
+                </div>
+                <p className="text-sm text-red-700 mt-1">{aiError}</p>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
+              <button
+                onClick={() => setShowAIModal(false)}
+                className="px-6 py-2 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors font-medium"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={onGenerate}
+                disabled={aiLoading || !aiPrompt.trim() || aiPrompt.length > 1000}
+                className="glossy-shine px-6 py-2 bg-gradient-to-r from-audittab-navy to-audittab-navy-700 text-white rounded-lg hover:from-audittab-navy-700 hover:to-audittab-navy-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-medium shadow-md hover:shadow-lg"
+              >
+                {aiLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Génération en cours...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4" />
+                    Générer
+                  </>
+                )}
+              </button>
+            </div>
           </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Popup de génération en cours
+  const renderGenerationPopup = () => {
+    if (!aiLoading && !generationResult) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[60] backdrop-blur-sm">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 text-center animate-in fade-in-0 zoom-in-95 duration-300">
+          <div className="relative mb-6">
+            <div className="w-20 h-20 bg-gradient-to-r from-audittab-navy to-audittab-navy-700 rounded-full flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center">
+                <Sparkles className="h-8 w-8 text-audittab-navy" />
+              </div>
+            </div>
+          </div>
+
+          {aiLoading && (
+            <>
+              <h3 className="text-xl font-bold text-slate-900 mb-2">Génération en cours</h3>
+              <p className="text-slate-600 mb-4">L'IA analyse votre demande et crée la structure de l'intervention...</p>
+
+              {/* Progress bar */}
+              <div className="w-full bg-slate-200 rounded-full h-3 mb-3 overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-audittab-navy to-audittab-navy-700 rounded-full transition-all"
+                  style={{ width: `${generationProgress}%` }}
+                />
+              </div>
+              <div className="text-sm text-slate-500 mb-2">{generationProgress}%</div>
+              <div className="text-sm text-slate-500">Cela peut prendre quelques secondes...</div>
+            </>
+          )}
+
+          {generationResult && !aiLoading && (
+            <div>
+              <div className="flex items-center justify-center mb-3">
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 mb-1">Génération terminée !</h3>
+              <p className="text-slate-600 mb-4">{generationResult.message}</p>
+              
+              <div className="flex justify-center">
+                <button
+                  onClick={() => setGenerationResult(null)}
+                  className="px-5 py-2 bg-audittab-navy text-white rounded-lg hover:bg-audittab-green-dark transition-colors">
+                  Fermer
+                </button>
+              </div>
+
+            </div>
+          )}
         </div>
       </div>
     );
@@ -436,22 +684,16 @@ export default function InterventionCreator() {
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-slate-900">Créer une intervention</h2>
-          <div className="flex gap-3">
-            <button
-              onClick={cancelCreating}
-              className="px-4 py-2 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
-            >
-              Annuler
-            </button>
-            <button
-              onClick={saveIntervention}
-              disabled={!currentIntervention.name}
-              className="px-6 py-2 bg-audittab-green text-white rounded-lg hover:bg-audittab-green-dark transition-colors disabled:bg-slate-300 disabled:cursor-not-allowed"
-            >
-              Enregistrer
-            </button>
-          </div>
+          <button
+            onClick={cancelCreating}
+            className="flex items-center gap-2 px-3 py-2 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
+            title="Retour"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Retour
+          </button>
+          <h2 className="text-2xl font-bold text-audittab-navy">Créer une intervention</h2>
+          <div className="w-20"></div> {/* Spacer pour centrer le titre */}
         </div>
 
         {/* Informations de base */}
@@ -565,14 +807,31 @@ export default function InterventionCreator() {
                     <Plus className="h-4 w-4" />
                     Ajouter une opération
                   </button>
-                  <button
-                    onClick={() => setShowAIModal(true)}
-                    title="Générer via IA"
-                    className="flex items-center gap-2 px-4 py-2 bg-audittab-green text-white rounded-lg hover:bg-audittab-green-dark transition-colors text-sm"
-                  >
-                    <Settings className="h-4 w-4" />
-                    IA
-                  </button>
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowAIModal(true)}
+                      onMouseEnter={() => setShowAITooltip(true)}
+                      onMouseLeave={() => setShowAITooltip(false)}
+                      className="glossy-shine flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-audittab-navy to-audittab-navy-800 text-white rounded-lg hover:from-audittab-navy-600 hover:to-audittab-navy-700 transition-all duration-200 text-sm shadow-md hover:shadow-lg transform hover:scale-105"
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      IA
+                    </button>
+                    
+                    {/* Tooltip */}
+                    {showAITooltip && (
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-4 py-3 bg-gradient-to-r from-audittab-navy to-audittab-navy-700 text-white text-sm rounded-xl shadow-xl border border-audittab-navy-600 whitespace-nowrap z-10 animate-in fade-in-0 zoom-in-95 duration-200">
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="h-4 w-4 text-yellow-300" />
+                          <span className="font-medium">Besoin d'aide ?</span>
+                        </div>
+                        <div className="text-xs text-slate-200 mt-1">
+                          Laissez l'IA vous aider à créer vos interventions
+                        </div>
+                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-6 border-transparent border-t-audittab-navy-700"></div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -799,6 +1058,17 @@ export default function InterventionCreator() {
             </button>
           </div>
         )}
+
+        {/* Bouton Enregistrer en bas à droite */}
+        <div className="flex justify-end mt-8">
+          <button
+            onClick={saveIntervention}
+            disabled={!currentIntervention.name}
+            className="px-8 py-3 bg-audittab-green text-white rounded-lg hover:bg-audittab-green-dark transition-colors disabled:bg-slate-300 disabled:cursor-not-allowed text-lg font-medium shadow-md hover:shadow-lg"
+          >
+            Enregistrer
+          </button>
+        </div>
       </div>
     );
   };
@@ -1028,6 +1298,7 @@ export default function InterventionCreator() {
       {/* Modal d'aperçu */}
       {renderPreviewModal()}
       {renderAIModal()}
+      {renderGenerationPopup()}
     </div>
   );
 }

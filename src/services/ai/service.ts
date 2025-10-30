@@ -92,19 +92,29 @@ export class AiService {
       active: aiState.recordDetails?.active !== undefined ? aiState.recordDetails.active : true,
     };
 
-    const operations = (aiState.listOperations || []).map((op: any, opIndex: number) => ({
-      id: op.operationIdentifiant || `op-${Date.now()}-${opIndex}`,
-      name: op.operationLabel || `Opération ${opIndex + 1}`,
-      description: op.operationLabel,
-      fields: (op.listUnitWorks || []).map((unit: any, unitIndex: number) => ({
-        id: unit.workUnitIdentifiant || `field-${Date.now()}-${unitIndex}`,
-        type: mapResponseTypeToFieldType(unit.workUnitType, unit.responseType),
-        label: unit.workUnitLabel || `Champ ${unitIndex + 1}`,
-        description: unit.workUnitInfo,
-        required: unit.obligatoire || false,
-        options: parseSelectOptions(unit.responseValue)
-      }))
-    }));
+    const operations = (aiState.listOperations || []).map((op: any, opIndex: number) => {
+      // Générer un ID unique même si l'IA retourne le même identifiant
+      const uniqueId = `${op.operationIdentifiant || 'op'}-${Date.now()}-${opIndex}`;
+
+      return {
+        id: uniqueId,
+        name: op.operationLabel || `Opération ${opIndex + 1}`,
+        description: op.operationLabel,
+        fields: (op.listUnitWorks || []).map((unit: any, unitIndex: number) => {
+          // Générer un ID unique pour chaque champ aussi
+          const uniqueFieldId = `${unit.workUnitIdentifiant || 'field'}-${Date.now()}-${opIndex}-${unitIndex}`;
+
+          return {
+            id: uniqueFieldId,
+            type: mapResponseTypeToFieldType(unit.workUnitType, unit.responseType),
+            label: unit.workUnitLabel || `Champ ${unitIndex + 1}`,
+            description: unit.workUnitInfo,
+            required: unit.obligatoire || false,
+            options: parseSelectOptions(unit.responseValue)
+          };
+        })
+      };
+    });
 
     return { recordDetails, operations };
   }
