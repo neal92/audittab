@@ -1,4 +1,4 @@
-import { CheckSquare, XSquare, Minus, Camera, ArrowLeft, Save, Paperclip, Mic, Star, Plus, Trash } from 'lucide-react';
+import { CheckSquare, XSquare, Minus, Camera, ArrowLeft, Save, Paperclip, Mic, Star, Plus, Trash, Copy } from 'lucide-react';
 import { OperationField } from '../../lib/types';
 import { useRecordCreator } from './hooks';
 
@@ -28,6 +28,7 @@ export default function RecordCreator() {
     updateFieldComment,
     saveRecord,
     deleteRecord,
+    duplicateIntervention,
   } = useRecordCreator();
 
   // Rendre un champ selon son type
@@ -677,31 +678,42 @@ export default function RecordCreator() {
                 ) : (
                   <div className="grid gap-3 max-h-96 overflow-y-auto">
                     {interventions.map(intervention => (
-                      <button
-                        key={intervention.id}
-                        onClick={() => {
-                          setSelectedIntervention(intervention);
-                          setSelectedProject('1'); // ID du projet Paris
-                          setFormData({});
-                          setFieldComments({});
-                          setIsCreating(true);
-                          setShowNewRecordModal(false);
-                        }}
-                        className="bg-slate-50 border-2 border-slate-200 rounded-lg p-4 hover:border-audittab-green hover:bg-white transition-all text-left"
-                      >
-                        <h4 className="font-semibold text-slate-900 mb-1">{intervention.name}</h4>
-                        <div className="text-xs text-slate-500">
-                          {intervention.operations.length} opération(s)
-                        </div>
-                        <div className="text-xs text-slate-400 mt-1">
-                          Titre généré : {(() => {
-                            const existingRecordsCount = records.filter(record => record.intervention_id === intervention.id).length;
-                            const nextNumber = existingRecordsCount + 1;
-                            const formattedNumber = nextNumber.toString().padStart(3, '0');
-                            return `${intervention.name} - ProjetParis - ${formattedNumber}`;
-                          })()}
-                        </div>
-                      </button>
+                      <div key={intervention.id} className="flex gap-2 items-start">
+                        <button
+                          onClick={() => {
+                            setSelectedIntervention(intervention);
+                            setSelectedProject('1'); // ID du projet Paris
+                            setFormData({});
+                            setFieldComments({});
+                            setIsCreating(true);
+                            setShowNewRecordModal(false);
+                          }}
+                          className="flex-1 bg-slate-50 border-2 border-slate-200 rounded-lg p-4 hover:border-audittab-green hover:bg-white transition-all text-left"
+                        >
+                          <h4 className="font-semibold text-slate-900 mb-1">{intervention.name}</h4>
+                          <div className="text-xs text-slate-500">
+                            {intervention.operations.length} opération(s)
+                          </div>
+                          <div className="text-xs text-slate-400 mt-1">
+                            Titre généré : {(() => {
+                              const existingRecordsCount = records.filter(record => record.intervention_id === intervention.id).length;
+                              const nextNumber = existingRecordsCount + 1;
+                              const formattedNumber = nextNumber.toString().padStart(3, '0');
+                              return `${intervention.name} - ProjetParis - ${formattedNumber}`;
+                            })()}
+                          </div>
+                        </button>
+                        <button
+                          onClick={() => {
+                            // Dupliquer l'intervention
+                            duplicateIntervention(intervention);
+                          }}
+                          className="p-3 bg-audittab-navy text-white rounded-lg hover:bg-audittab-navy-dark transition-colors shadow-sm"
+                          title="Dupliquer cette intervention"
+                        >
+                          <Copy className="w-5 h-5" />
+                        </button>
+                      </div>
                     ))}
                   </div>
                 )}

@@ -17,6 +17,12 @@ export function useRecordCreator() {
   const [viewingRecord, setViewingRecord] = useState<AuditRecord | null>(null);
   const [showNewRecordModal, setShowNewRecordModal] = useState(false);
 
+  // États pour le système multi-étapes
+  const [currentStep, setCurrentStep] = useState(1);
+  const [conclusion, setConclusion] = useState('');
+  const [nonConformites, setNonConformites] = useState('');
+  const [signature, setSignature] = useState('');
+
   // Charger les interventions depuis localStorage
   useEffect(() => {
     const storedInterventions = localStorage.getItem('interventions');
@@ -37,6 +43,24 @@ export function useRecordCreator() {
     setFormData({});
     setFieldComments({});
     setIsCreating(false);
+    setCurrentStep(1);
+    setConclusion('');
+    setNonConformites('');
+    setSignature('');
+  };
+
+  // Passer à l'étape suivante
+  const handleNextStep = () => {
+    if (currentStep === 1) {
+      setCurrentStep(2);
+    }
+  };
+
+  // Revenir à l'étape précédente
+  const handlePreviousStep = () => {
+    if (currentStep === 2) {
+      setCurrentStep(1);
+    }
   };
 
   // Mettre à jour une valeur de champ
@@ -85,6 +109,9 @@ export function useRecordCreator() {
       created_by: 'mock-user',
       data: formData,
       comments: fieldComments,
+      conclusion,
+      nonConformites,
+      signature,
       created_at: new Date().toISOString(),
       completed: !hasNonConforme,
     };
@@ -106,6 +133,18 @@ export function useRecordCreator() {
     localStorage.setItem('auditRecords', JSON.stringify(updatedRecords));
   };
 
+  // Dupliquer une intervention
+  const duplicateIntervention = (intervention: Intervention) => {
+    const duplicatedIntervention: Intervention = {
+      ...intervention,
+      id: uuidv4(),
+      name: `${intervention.name} (Copie)`
+    };
+    const updatedInterventions = [...interventions, duplicatedIntervention];
+    setInterventions(updatedInterventions);
+    localStorage.setItem('interventions', JSON.stringify(updatedInterventions));
+  };
+
   return {
     // State
     interventions,
@@ -117,6 +156,10 @@ export function useRecordCreator() {
     isCreating,
     viewingRecord,
     showNewRecordModal,
+    currentStep,
+    conclusion,
+    nonConformites,
+    signature,
 
     // Setters
     setInterventions,
@@ -128,6 +171,10 @@ export function useRecordCreator() {
     setIsCreating,
     setViewingRecord,
     setShowNewRecordModal,
+    setCurrentStep,
+    setConclusion,
+    setNonConformites,
+    setSignature,
 
     // Methods
     cancelCreating,
@@ -135,5 +182,8 @@ export function useRecordCreator() {
     updateFieldComment,
     saveRecord,
     deleteRecord,
+    duplicateIntervention,
+    handleNextStep,
+    handlePreviousStep,
   };
 }

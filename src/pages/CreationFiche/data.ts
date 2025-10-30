@@ -36,6 +36,9 @@ export interface AuditRecord {
   created_by: string;
   data: RecordData;
   comments?: FieldComments; // Commentaires pour les checkpoints
+  conclusion?: string;
+  nonConformites?: string;
+  signature?: string;
   created_at: string;
   completed: boolean;
 }
