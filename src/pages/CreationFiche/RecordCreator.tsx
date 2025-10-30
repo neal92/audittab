@@ -10,7 +10,6 @@ export default function RecordCreator() {
     interventions,
     records,
     selectedIntervention,
-    selectedProject,
     formData,
     fieldComments,
     isCreating,
@@ -23,12 +22,15 @@ export default function RecordCreator() {
     setIsCreating,
     setViewingRecord,
     setShowNewRecordModal,
+    setConclusion,
+    setNonConformites,
+    setSignature,
     cancelCreating,
     updateFieldValue,
     updateFieldComment,
     saveRecord,
     deleteRecord,
-    duplicateIntervention,
+    duplicateRecord,
   } = useRecordCreator();
 
   // Rendre un champ selon son type
@@ -600,7 +602,25 @@ export default function RecordCreator() {
               </thead>
               <tbody className="divide-y divide-slate-200">
                 {records.map(record => (
-                  <tr key={record.id} className="hover:bg-slate-50 cursor-pointer" onClick={() => setViewingRecord(record)}>
+                  <tr key={record.id} className="hover:bg-slate-50 cursor-pointer" onClick={() => {
+                    if (!record.completed) {
+                      // Ouvrir l'édition pour les fiches "À sauvegarder"
+                      const intervention = interventions.find(i => i.id === record.intervention_id);
+                      if (intervention) {
+                        setSelectedIntervention(intervention);
+                        setSelectedProject(record.project_id || '1');
+                        setFormData(record.data);
+                        setFieldComments(record.comments || {});
+                        setConclusion(record.conclusion || '');
+                        setNonConformites(record.nonConformites || '');
+                        setSignature(record.signature || '');
+                        setIsCreating(true);
+                      }
+                    } else {
+                      // Ouvrir la visualisation pour les fiches complètes
+                      setViewingRecord(record);
+                    }
+                  }}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{(() => {
                       const interventionRecords = records.filter(r => r.intervention_id === record.intervention_id);
                       const recordIndex = interventionRecords.findIndex(r => r.id === record.id) + 1;
@@ -621,21 +641,34 @@ export default function RecordCreator() {
                       <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                         record.completed 
                           ? 'bg-green-100 text-green-700' 
-                          : 'bg-red-100 text-red-700'
+                          : 'bg-yellow-100 text-yellow-700'
                       }`}>
-                        {record.completed ? 'Conforme' : 'Non conforme'}
+                        {record.completed ? 'Conforme' : 'À sauvegarder'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteRecord(record.id);
-                        }}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        <Trash className="h-5 w-5" />
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            duplicateRecord(record);
+                          }}
+                          className="text-blue-600 hover:text-blue-900"
+                          title="Dupliquer cette fiche"
+                        >
+                          <Copy className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteRecord(record.id);
+                          }}
+                          className="text-red-600 hover:text-red-900"
+                          title="Supprimer cette fiche"
+                        >
+                          <Trash className="h-5 w-5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -678,42 +711,23 @@ export default function RecordCreator() {
                 ) : (
                   <div className="grid gap-3 max-h-96 overflow-y-auto">
                     {interventions.map(intervention => (
-                      <div key={intervention.id} className="flex gap-2 items-start">
-                        <button
-                          onClick={() => {
-                            setSelectedIntervention(intervention);
-                            setSelectedProject('1'); // ID du projet Paris
-                            setFormData({});
-                            setFieldComments({});
-                            setIsCreating(true);
-                            setShowNewRecordModal(false);
-                          }}
-                          className="flex-1 bg-slate-50 border-2 border-slate-200 rounded-lg p-4 hover:border-audittab-green hover:bg-white transition-all text-left"
-                        >
-                          <h4 className="font-semibold text-slate-900 mb-1">{intervention.name}</h4>
-                          <div className="text-xs text-slate-500">
-                            {intervention.operations.length} opération(s)
-                          </div>
-                          <div className="text-xs text-slate-400 mt-1">
-                            Titre généré : {(() => {
-                              const existingRecordsCount = records.filter(record => record.intervention_id === intervention.id).length;
-                              const nextNumber = existingRecordsCount + 1;
-                              const formattedNumber = nextNumber.toString().padStart(3, '0');
-                              return `${intervention.name} - ProjetParis - ${formattedNumber}`;
-                            })()}
-                          </div>
-                        </button>
-                        <button
-                          onClick={() => {
-                            // Dupliquer l'intervention
-                            duplicateIntervention(intervention);
-                          }}
-                          className="p-3 bg-audittab-navy text-white rounded-lg hover:bg-audittab-navy-dark transition-colors shadow-sm"
-                          title="Dupliquer cette intervention"
-                        >
-                          <Copy className="w-5 h-5" />
-                        </button>
-                      </div>
+                      <button
+                        key={intervention.id}
+                        onClick={() => {
+                          setSelectedIntervention(intervention);
+                          setSelectedProject('1'); // ID du projet Paris
+                          setFormData({});
+                          setFieldComments({});
+                          setIsCreating(true);
+                          setShowNewRecordModal(false);
+                        }}
+                        className="bg-slate-50 border-2 border-slate-200 rounded-lg p-4 hover:border-audittab-green hover:bg-white transition-all text-left"
+                      >
+                        <h4 className="font-semibold text-slate-900 mb-1">{intervention.name}</h4>
+                        <div className="text-xs text-slate-500">
+                          {intervention.operations.length} opération(s)
+                        </div>
+                      </button>
                     ))}
                   </div>
                 )}

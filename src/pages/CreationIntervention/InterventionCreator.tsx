@@ -646,7 +646,12 @@ export default function InterventionCreator() {
                 }}
                 className="w-full bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md hover:border-audittab-green transition-all text-left"
               >
-                <h3 className="text-lg font-semibold text-slate-900">{intervention.name}</h3>
+                <div className="pr-20">
+                  <h3 className="text-lg font-semibold text-slate-900 truncate">{intervention.name}</h3>
+                  {intervention.description && (
+                    <p className="text-sm text-slate-600 mt-1 overflow-hidden text-ellipsis" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{intervention.description}</p>
+                  )}
+                </div>
                 <div className="flex items-center justify-between mt-4 text-sm text-slate-500">
                   <span>{intervention.operations.length} opération(s)</span>
                   <span>
@@ -659,17 +664,39 @@ export default function InterventionCreator() {
                 </div>
               </button>
               
-              {/* Bouton de suppression */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  deleteIntervention(intervention.id);
-                }}
-                className="absolute top-2 right-2 p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                title="Supprimer l'intervention"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
+              {/* Boutons d'action */}
+              <div className="absolute top-2 right-2 flex gap-1">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Dupliquer l'intervention
+                    const duplicatedIntervention: Intervention = {
+                      ...intervention,
+                      id: uuidv4(),
+                      name: `${intervention.name} (Copie)`
+                    };
+                    const updatedInterventions = [...interventions, duplicatedIntervention];
+                    setInterventions(updatedInterventions);
+                    localStorage.setItem('interventions', JSON.stringify(updatedInterventions));
+                  }}
+                  className="p-2 bg-audittab-navy text-white rounded-lg hover:bg-audittab-navy-dark transition-colors"
+                  title="Dupliquer cette intervention"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteIntervention(intervention.id);
+                  }}
+                  className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  title="Supprimer l'intervention"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
             </div>
           ))}
         </div>

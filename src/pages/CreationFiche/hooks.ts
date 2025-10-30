@@ -145,6 +145,19 @@ export function useRecordCreator() {
     localStorage.setItem('interventions', JSON.stringify(updatedInterventions));
   };
 
+  // Dupliquer une fiche
+  const duplicateRecord = (record: AuditRecord) => {
+    const duplicatedRecord: AuditRecord = {
+      ...record,
+      id: uuidv4(),
+      created_at: new Date().toISOString(),
+      completed: false, // La fiche dupliquée aura le statut "À sauvegarder"
+    };
+    const updatedRecords = [...records, duplicatedRecord];
+    setRecords(updatedRecords);
+    localStorage.setItem('auditRecords', JSON.stringify(updatedRecords));
+  };
+
   return {
     // State
     interventions,
@@ -183,6 +196,7 @@ export function useRecordCreator() {
     saveRecord,
     deleteRecord,
     duplicateIntervention,
+    duplicateRecord,
     handleNextStep,
     handlePreviousStep,
   };
