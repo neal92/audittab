@@ -1,6 +1,28 @@
-import { CheckSquare, XSquare, Plus, Trash2, GripVertical, Type, Hash, AlignLeft, CheckCheck, Calendar, Image as ImageIcon, Star, List, Camera, Mic, Paperclip, ChevronUp, ChevronDown, Settings, Eye } from 'lucide-react';
+import {
+  CheckSquare,
+  XSquare,
+  Plus,
+  Trash2,
+  GripVertical,
+  Type,
+  Hash,
+  AlignLeft,
+  CheckCheck,
+  Calendar,
+  ImageIcon,
+  Star,
+  List,
+  Camera,
+  Mic,
+  Paperclip,
+  ChevronUp,
+  ChevronDown,
+  Settings,
+  Eye
+} from '../../lib/icons';
 import { v4 as uuidv4 } from 'uuid';
 import { useState, useEffect } from 'react';
+import { generateStructureFromPrompt } from '../../services/ai';
 // Injecte l'animation CSS pour l'étoile favoris une seule fois
 if (typeof window !== 'undefined' && !document.head.querySelector('style[data-fav-anim]')) {
   const style = document.createElement('style');
@@ -46,6 +68,11 @@ export default function InterventionCreator() {
 
   // État pour afficher la modal d'aperçu
   const [showPreviewModal, setShowPreviewModal] = useState(false);
+  // État pour l'IA (modal prompt, loading, erreur)
+  const [showAIModal, setShowAIModal] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
 
   // Sauvegarder les favoris dans localStorage
   const toggleFavoriteTool = (type: FieldType) => {
@@ -159,6 +186,84 @@ export default function InterventionCreator() {
       ...currentIntervention,
       operations: currentIntervention.operations?.filter(op => op.id !== operationId) || [],
     });
+  };
+
+  // Rendre la modal IA pour saisir un prompt et générer une structure
+  const renderAIModal = () => {
+    if (!showAIModal) return null;
+
+    const onGenerate = async () => {
+      setAiError(null);
+      setAiLoading(true);
+        try {
+          // Prefer local generate_sheet_ia parser/webhook wrapper which matches your external scripts
+          const result = await generateStructureFromPrompt(aiPrompt, currentIntervention || undefined);
+          const ops = result?.operations || [];
+          if (ops && ops.length > 0) {
+            const operations: Operation[] = ops.map((op: any) => ({
+              id: op.id || uuidv4(),
+              name: op.name || 'Opération générée',
+              description: op.description || '',
+              fields: (op.fields || []).map((f: any) => ({
+                id: f.id || uuidv4(),
+                type: f.type || 'text',
+                label: f.label || 'Champ',
+                description: f.description || '',
+                required: !!f.required,
+                options: Array.isArray(f.options) ? f.options.map((o: any) => ({ id: uuidv4(), label: o.label || o })) : undefined,
+              })),
+            }));
+
+            setCurrentIntervention({
+              ...currentIntervention,
+              operations: [...(currentIntervention?.operations || []), ...operations],
+            });
+            setShowAIModal(false);
+            setAiPrompt('');
+          } else {
+            setAiError('Réponse IA invalide — aucune opération trouvée.');
+          }
+        } catch (err: any) {
+          setAiError(err?.message || 'Erreur lors de la génération IA');
+        } finally {
+          setAiLoading(false);
+        }
+    };
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold">Génération IA</h3>
+            <button onClick={() => setShowAIModal(false)} className="p-1.5 rounded hover:bg-slate-100">
+              <XSquare className="h-5 w-5 text-slate-600" />
+            </button>
+          </div>
+
+          <label className="block text-sm text-slate-600 mb-2">Prompt</label>
+          <textarea
+            value={aiPrompt}
+            onChange={(e) => setAiPrompt(e.target.value)}
+            rows={5}
+            className="w-full border border-slate-200 rounded px-3 py-2 mb-3"
+            placeholder="Décris le type d'intervention et les opérations/champs souhaités..."
+          />
+
+          {aiError && <div className="text-sm text-red-600 mb-2">{aiError}</div>}
+
+          <div className="flex justify-end gap-3">
+            <button onClick={() => setShowAIModal(false)} className="px-4 py-2 rounded border border-slate-200">Annuler</button>
+            <button
+              onClick={onGenerate}
+              disabled={aiLoading || !aiPrompt.trim()}
+              className="px-4 py-2 bg-audittab-green text-white rounded-lg hover:bg-audittab-green-dark transition-colors disabled:opacity-60"
+            >
+              {aiLoading ? 'Génération...' : 'Générer'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   // Mettre à jour une opération
@@ -452,13 +557,23 @@ export default function InterventionCreator() {
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold text-slate-900">Opérations</h3>
-                <button
-                  onClick={addOperation}
-                  className="flex items-center gap-2 px-4 py-2 bg-audittab-green text-white rounded-lg hover:bg-audittab-green-dark transition-colors text-sm"
-                >
-                  <Plus className="h-4 w-4" />
-                  Ajouter une opération
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={addOperation}
+                    className="flex items-center gap-2 px-4 py-2 bg-audittab-green text-white rounded-lg hover:bg-audittab-green-dark transition-colors text-sm"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Ajouter une opération
+                  </button>
+                  <button
+                    onClick={() => setShowAIModal(true)}
+                    title="Générer via IA"
+                    className="flex items-center gap-2 px-4 py-2 bg-audittab-green text-white rounded-lg hover:bg-audittab-green-dark transition-colors text-sm"
+                  >
+                    <Settings className="h-4 w-4" />
+                    IA
+                  </button>
+                </div>
               </div>
 
               {currentIntervention.operations && currentIntervention.operations.length > 0 ? (
@@ -912,6 +1027,7 @@ export default function InterventionCreator() {
       </div>
       {/* Modal d'aperçu */}
       {renderPreviewModal()}
+      {renderAIModal()}
     </div>
   );
 }
