@@ -610,7 +610,11 @@ export default function InterventionCreator() {
   const renderInterventionsList = () => (
     <div className="space-y-4">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-audittab-navy">Mes interventions</h2>
+        <div>
+          <h2 className="text-2xl font-bold text-audittab-navy">Mes interventions</h2>
+          <p className="text-slate-600 mt-1">Gérez vos interventions</p>
+        </div>
+        
         <button
           onClick={startCreating}
           className="flex items-center gap-2 px-4 py-2 bg-audittab-green text-white rounded-lg hover:bg-audittab-green-dark transition-colors"
@@ -648,9 +652,6 @@ export default function InterventionCreator() {
               >
                 <div className="pr-20">
                   <h3 className="text-lg font-semibold text-slate-900 truncate">{intervention.name}</h3>
-                  {intervention.description && (
-                    <p className="text-sm text-slate-600 mt-1 overflow-hidden text-ellipsis" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{intervention.description}</p>
-                  )}
                 </div>
                 <div className="flex items-center justify-between mt-4 text-sm text-slate-500">
                   <span>{intervention.operations.length} opération(s)</span>
@@ -679,7 +680,7 @@ export default function InterventionCreator() {
                     setInterventions(updatedInterventions);
                     localStorage.setItem('interventions', JSON.stringify(updatedInterventions));
                   }}
-                  className="p-2 bg-audittab-navy text-white rounded-lg hover:bg-audittab-navy-dark transition-colors"
+                  className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                   title="Dupliquer cette intervention"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

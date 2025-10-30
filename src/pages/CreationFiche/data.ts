@@ -40,5 +40,7 @@ export interface AuditRecord {
   nonConformites?: string;
   signature?: string;
   created_at: string;
+  updated_at: string;
   completed: boolean;
+  completed_at?: string;
 }

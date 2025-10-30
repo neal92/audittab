@@ -32,7 +32,7 @@ export default function UserManagement() {
       
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-audittab-navy">Gestion des utilisateurs</h1>
+          <h1 className="text-2xl font-bold text-audittab-navy">Gestion des utilisateurs</h1>
           <p className="text-slate-600 mt-1">Gérez les membres de votre équipe</p>
         </div>
         <button
@@ -146,7 +146,7 @@ export default function UserManagement() {
                   {new Date(user.created_at).toLocaleDateString('fr-FR')}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right">
-                  {user.id !== profile?.id && (
+                  {user.id !== profile?.id && user.role !== 'admin' && (
                     <button
                       onClick={() => deleteUser(user.id)}
                       className="text-red-600 hover:text-red-800 transition-colors"

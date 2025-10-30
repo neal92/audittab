@@ -1,6 +1,46 @@
+import { useState } from 'react';
 import { CheckSquare, XSquare, Minus, Camera, ArrowLeft, Save, Paperclip, Mic, Star, Plus, Trash, Copy } from 'lucide-react';
 import { OperationField } from '../../lib/types';
 import { useRecordCreator } from './hooks';
+
+/**
+ * Fonction helper pour calculer l'état de conformité d'une fiche
+ */
+function calculateComplianceState(record: any, interventions: any[]): 'Conforme' | 'Non conforme' | 'Non applicable' {
+  // Trouver l'intervention correspondante
+  const intervention = interventions.find(i => i.id === record.intervention_id);
+  if (!intervention) return 'Non applicable';
+
+  let hasNonConforme = false;
+  let hasConforme = false;
+  let allNonApplicable = true;
+
+  // Parcourir toutes les opérations et leurs champs
+  for (const operation of intervention.operations || []) {
+    for (const field of operation.fields || []) {
+      if (field.type === 'checkpoint') {
+        const fieldValue = record.data?.[operation.id]?.[field.id];
+        
+        if (fieldValue === 'non_conforme') {
+          hasNonConforme = true;
+          allNonApplicable = false;
+        } else if (fieldValue === 'conforme') {
+          hasConforme = true;
+          allNonApplicable = false;
+        }
+        // Si fieldValue est undefined ou autre, on considère que c'est non applicable
+      }
+    }
+  }
+
+  if (hasNonConforme) {
+    return 'Non conforme';
+  } else if (allNonApplicable) {
+    return 'Non applicable';
+  } else {
+    return 'Conforme';
+  }
+}
 
 /**
  * Composant pour créer et remplir des fiches basées sur des interventions
@@ -31,9 +71,13 @@ export default function RecordCreator() {
     updateFieldValue,
     updateFieldComment,
     saveRecord,
+    saveDraft,
     deleteRecord,
     duplicateRecord,
   } = useRecordCreator();
+
+  // État pour gérer la confirmation de suppression
+  const [recordToDelete, setRecordToDelete] = useState<string | null>(null);
 
   // Rendre un champ selon son type
   const renderField = (field: OperationField, operationId: string) => {
@@ -372,13 +416,6 @@ export default function RecordCreator() {
               </p>
             </div>
           </div>
-          <button
-            onClick={saveRecord}
-            className="flex items-center gap-2 px-6 py-2 bg-audittab-green text-white rounded-lg hover:bg-audittab-green-dark transition-colors"
-          >
-            <Save className="h-5 w-5" />
-            Enregistrer
-          </button>
         </div>
 
         {/* Opérations et champs */}
@@ -418,6 +455,24 @@ export default function RecordCreator() {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Boutons d'action en bas */}
+        <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-200">
+          <button
+            onClick={saveDraft}
+            className="flex items-center gap-2 px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-colors"
+          >
+            <Save className="h-5 w-5" />
+            Sauvegarder
+          </button>
+          <button
+            onClick={saveRecord}
+            className="flex items-center gap-2 px-6 py-2 bg-audittab-green text-white rounded-lg hover:bg-audittab-green-dark transition-colors"
+          >
+            <CheckSquare className="h-5 w-5" />
+            Valider
+          </button>
         </div>
       </div>
     );
@@ -591,15 +646,19 @@ export default function RecordCreator() {
       {records.length > 0 ? (
         <div>
           <h3 className="text-lg font-semibold text-audittab-navy mb-4">Fiches récentes</h3>
-          <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+          <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-x-auto">
             <table className="w-full">
               <thead className="bg-slate-50 border-b border-slate-200">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Titre</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Projet</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Date de création</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Statut</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Titre</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Projet</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">User</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Créé</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Modif</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Fin</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">État</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Statut</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
@@ -624,39 +683,81 @@ export default function RecordCreator() {
                       setViewingRecord(record);
                     }
                   }}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{(() => {
+                    <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-slate-900">{(() => {
                       const interventionRecords = records.filter(r => r.intervention_id === record.intervention_id);
                       const recordIndex = interventionRecords.findIndex(r => r.id === record.id) + 1;
                       const formattedNumber = recordIndex.toString().padStart(3, '0');
                       return `${record.intervention_name}_ProjetParis_${formattedNumber}`;
                     })()}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{record.project_name || '-'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                      {new Date(record.created_at).toLocaleDateString('fr-FR', {
-                        day: 'numeric',
-                        month: 'long',
-                        year: 'numeric',
+                    <td className="px-3 py-2 whitespace-nowrap text-sm text-slate-500">{record.project_name || '-'}</td>
+                    <td className="px-3 py-2 whitespace-nowrap text-sm text-slate-500">{record.created_by || '-'}</td>
+                    <td className="px-3 py-2 whitespace-nowrap text-sm text-slate-500">
+                      {new Date(record.created_at).toLocaleString('fr-FR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: '2-digit',
                         hour: '2-digit',
                         minute: '2-digit'
                       })}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-2 whitespace-nowrap text-sm text-slate-500">
+                      {record.updated_at ? new Date(record.updated_at).toLocaleString('fr-FR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      }) : '-'}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap text-sm text-slate-500">
+                      {record.completed_at ? new Date(record.completed_at).toLocaleString('fr-FR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      }) : '-'}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap">
+                      {!record.completed ? (
+                        <span className="text-sm text-slate-500">-</span>
+                      ) : (
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                          (() => {
+                            const state = calculateComplianceState(record, interventions);
+                            switch (state) {
+                              case 'Conforme':
+                                return 'bg-green-100 text-green-700';
+                              case 'Non conforme':
+                                return 'bg-red-100 text-red-700';
+                              case 'Non applicable':
+                                return 'bg-slate-100 text-slate-700';
+                              default:
+                                return 'bg-slate-100 text-slate-700';
+                            }
+                          })()
+                        }`}>
+                          {calculateComplianceState(record, interventions)}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap">
                       <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                         record.completed 
                           ? 'bg-green-100 text-green-700' 
                           : 'bg-yellow-100 text-yellow-700'
                       }`}>
-                        {record.completed ? 'Conforme' : 'À sauvegarder'}
+                        {record.completed ? 'Validé' : 'Brouillon'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <td className="px-3 py-2 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center gap-2">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             duplicateRecord(record);
                           }}
-                          className="text-blue-600 hover:text-blue-900"
+                          className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                           title="Dupliquer cette fiche"
                         >
                           <Copy className="h-5 w-5" />
@@ -664,9 +765,9 @@ export default function RecordCreator() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            deleteRecord(record.id);
+                            setRecordToDelete(record.id);
                           }}
-                          className="text-red-600 hover:text-red-900"
+                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                           title="Supprimer cette fiche"
                         >
                           <Trash className="h-5 w-5" />
@@ -753,6 +854,33 @@ export default function RecordCreator() {
 
       {/* Modal de visualisation d'une fiche */}
       {viewingRecord && renderRecordViewer()}
+
+      {/* Modal de confirmation de suppression */}
+      {recordToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-audittab-navy mb-4">Confirmer la suppression</h3>
+            <p className="text-slate-600 mb-6">Êtes-vous sûr de vouloir supprimer cette fiche ? Cette action est irréversible.</p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setRecordToDelete(null)}
+                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={() => {
+                  deleteRecord(recordToDelete);
+                  setRecordToDelete(null);
+                }}
+                className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-lg transition-colors"
+              >
+                Supprimer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="max-w-7xl mx-auto">
         {isCreating ? renderCreator() : renderInterventionsList()}

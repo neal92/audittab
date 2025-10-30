@@ -33,7 +33,14 @@ export function useRecordCreator() {
 
     const storedRecords = localStorage.getItem('auditRecords');
     if (storedRecords) {
-      setRecords(JSON.parse(storedRecords));
+      const parsedRecords = JSON.parse(storedRecords);
+      // Migration pour ajouter les nouveaux champs aux anciens records
+      const migratedRecords = parsedRecords.map((record: any) => ({
+        ...record,
+        updated_at: record.updated_at || record.created_at,
+        completed_at: record.completed_at || (record.completed ? record.created_at : undefined),
+      }));
+      setRecords(migratedRecords);
     }
   }, []);
 
@@ -97,13 +104,11 @@ export function useRecordCreator() {
 
     const project = MOCK_PROJECTS.find(p => p.id === selectedProject);
 
-    // Vérifier s'il y a des non-conformités
-    const hasNonConforme = Object.values(formData).some(operationData =>
-      Object.values(operationData).some(value => value === 'non_conforme')
-    );
-
     if (editingRecordId) {
       // Mettre à jour la fiche existante
+      const existingRecord = records.find(r => r.id === editingRecordId);
+      const wasCompleted = existingRecord?.completed || false;
+      
       const updatedRecords = records.map(record =>
         record.id === editingRecordId
           ? {
@@ -113,7 +118,9 @@ export function useRecordCreator() {
               conclusion,
               nonConformites,
               signature,
-              completed: !hasNonConforme,
+              updated_at: new Date().toISOString(),
+              completed: true, // Toujours marquer comme validé lors de la validation
+              completed_at: !wasCompleted ? new Date().toISOString() : record.completed_at,
             }
           : record
       );
@@ -134,7 +141,9 @@ export function useRecordCreator() {
         nonConformites,
         signature,
         created_at: new Date().toISOString(),
-        completed: !hasNonConforme,
+        updated_at: new Date().toISOString(),
+        completed: true, // Toujours marquer comme validé lors de la validation
+        completed_at: new Date().toISOString(),
       };
 
       const updatedRecords = [newRecord, ...records];
@@ -143,6 +152,67 @@ export function useRecordCreator() {
     }
 
     alert('Fiche enregistrée avec succès !');
+    cancelCreating();
+  };
+
+  // Sauvegarder en brouillon (sans marquer comme complète)
+  const saveDraft = () => {
+    if (!selectedIntervention) return;
+    if (!selectedProject) {
+      alert('Veuillez sélectionner un projet');
+      return;
+    }
+
+    const project = MOCK_PROJECTS.find(p => p.id === selectedProject);
+
+    if (editingRecordId) {
+      // Mettre à jour la fiche existante en brouillon
+      const existingRecord = records.find(r => r.id === editingRecordId);
+      const wasCompleted = existingRecord?.completed || false;
+      
+      const updatedRecords = records.map(record =>
+        record.id === editingRecordId
+          ? {
+              ...record,
+              data: formData,
+              comments: fieldComments,
+              conclusion,
+              nonConformites,
+              signature,
+              updated_at: new Date().toISOString(),
+              completed: false, // Toujours en brouillon
+              completed_at: wasCompleted ? record.completed_at : undefined, // Garder la date si elle était déjà complète
+            }
+          : record
+      );
+      setRecords(updatedRecords);
+      localStorage.setItem('auditRecords', JSON.stringify(updatedRecords));
+    } else {
+      // Créer une nouvelle fiche en brouillon
+      const newRecord: AuditRecord = {
+        id: uuidv4(),
+        intervention_id: selectedIntervention.id,
+        intervention_name: selectedIntervention.name,
+        project_id: selectedProject,
+        project_name: project?.name,
+        created_by: 'mock-user',
+        data: formData,
+        comments: fieldComments,
+        conclusion,
+        nonConformites,
+        signature,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        completed: false, // Brouillon
+        completed_at: undefined,
+      };
+
+      const updatedRecords = [newRecord, ...records];
+      setRecords(updatedRecords);
+      localStorage.setItem('auditRecords', JSON.stringify(updatedRecords));
+    }
+
+    alert('Brouillon sauvegardé avec succès !');
     cancelCreating();
   };
 
@@ -218,6 +288,7 @@ export function useRecordCreator() {
     updateFieldValue,
     updateFieldComment,
     saveRecord,
+    saveDraft,
     deleteRecord,
     duplicateIntervention,
     duplicateRecord,
