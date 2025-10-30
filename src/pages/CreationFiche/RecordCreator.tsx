@@ -15,6 +15,7 @@ export default function RecordCreator() {
     isCreating,
     viewingRecord,
     showNewRecordModal,
+    editingRecordId,
     setSelectedIntervention,
     setSelectedProject,
     setFormData,
@@ -22,6 +23,7 @@ export default function RecordCreator() {
     setIsCreating,
     setViewingRecord,
     setShowNewRecordModal,
+    setEditingRecordId,
     setConclusion,
     setNonConformites,
     setSignature,
@@ -614,6 +616,7 @@ export default function RecordCreator() {
                         setConclusion(record.conclusion || '');
                         setNonConformites(record.nonConformites || '');
                         setSignature(record.signature || '');
+                        setEditingRecordId(record.id);
                         setIsCreating(true);
                       }
                     } else {

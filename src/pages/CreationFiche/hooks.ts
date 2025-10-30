@@ -16,6 +16,7 @@ export function useRecordCreator() {
   const [isCreating, setIsCreating] = useState(false);
   const [viewingRecord, setViewingRecord] = useState<AuditRecord | null>(null);
   const [showNewRecordModal, setShowNewRecordModal] = useState(false);
+  const [editingRecordId, setEditingRecordId] = useState<string | null>(null);
 
   // États pour le système multi-étapes
   const [currentStep, setCurrentStep] = useState(1);
@@ -43,6 +44,7 @@ export function useRecordCreator() {
     setFormData({});
     setFieldComments({});
     setIsCreating(false);
+    setEditingRecordId(null);
     setCurrentStep(1);
     setConclusion('');
     setNonConformites('');
@@ -100,25 +102,45 @@ export function useRecordCreator() {
       Object.values(operationData).some(value => value === 'non_conforme')
     );
 
-    const newRecord: AuditRecord = {
-      id: uuidv4(),
-      intervention_id: selectedIntervention.id,
-      intervention_name: selectedIntervention.name,
-      project_id: selectedProject,
-      project_name: project?.name,
-      created_by: 'mock-user',
-      data: formData,
-      comments: fieldComments,
-      conclusion,
-      nonConformites,
-      signature,
-      created_at: new Date().toISOString(),
-      completed: !hasNonConforme,
-    };
+    if (editingRecordId) {
+      // Mettre à jour la fiche existante
+      const updatedRecords = records.map(record =>
+        record.id === editingRecordId
+          ? {
+              ...record,
+              data: formData,
+              comments: fieldComments,
+              conclusion,
+              nonConformites,
+              signature,
+              completed: !hasNonConforme,
+            }
+          : record
+      );
+      setRecords(updatedRecords);
+      localStorage.setItem('auditRecords', JSON.stringify(updatedRecords));
+    } else {
+      // Créer une nouvelle fiche
+      const newRecord: AuditRecord = {
+        id: uuidv4(),
+        intervention_id: selectedIntervention.id,
+        intervention_name: selectedIntervention.name,
+        project_id: selectedProject,
+        project_name: project?.name,
+        created_by: 'mock-user',
+        data: formData,
+        comments: fieldComments,
+        conclusion,
+        nonConformites,
+        signature,
+        created_at: new Date().toISOString(),
+        completed: !hasNonConforme,
+      };
 
-    const updatedRecords = [newRecord, ...records];
-    setRecords(updatedRecords);
-    localStorage.setItem('auditRecords', JSON.stringify(updatedRecords));
+      const updatedRecords = [newRecord, ...records];
+      setRecords(updatedRecords);
+      localStorage.setItem('auditRecords', JSON.stringify(updatedRecords));
+    }
 
     alert('Fiche enregistrée avec succès !');
     cancelCreating();
@@ -169,6 +191,7 @@ export function useRecordCreator() {
     isCreating,
     viewingRecord,
     showNewRecordModal,
+    editingRecordId,
     currentStep,
     conclusion,
     nonConformites,
@@ -184,6 +207,7 @@ export function useRecordCreator() {
     setIsCreating,
     setViewingRecord,
     setShowNewRecordModal,
+    setEditingRecordId,
     setCurrentStep,
     setConclusion,
     setNonConformites,
