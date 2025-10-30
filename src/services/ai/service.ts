@@ -5,7 +5,6 @@
 
 import { GeneratedResult, AiServiceOptions } from './types';
 import { AiApiClient } from './api';
-import { AI_CONFIG } from './config';
 
 export class AiService {
   /**
@@ -118,11 +117,6 @@ export class AiService {
     currentState?: any,
     options: AiServiceOptions = {}
   ): Promise<GeneratedResult> {
-    // En mode mock, retourner des données factices
-    if (AI_CONFIG.isMockEnabled) {
-      return this.getMockResult();
-    }
-
     // Appel API
     const apiResponse = await AiApiClient.generateFromPrompt(prompt, currentState, options);
 
@@ -142,35 +136,6 @@ export class AiService {
     return (parsed as GeneratedResult) || { operations: [] };
   }
 
-  /**
-   * Résultat mock pour les tests/développement
-   */
-  private static getMockResult(): GeneratedResult {
-    return {
-      recordDetails: {
-        name: 'Fiche Mock',
-        functionalId: `FNC-${Date.now()}`,
-        duration: '30min',
-        active: true,
-      },
-      operations: [
-        {
-          id: 'op-mock-1',
-          name: 'Contrôle qualité',
-          description: 'Opération de contrôle qualité mock',
-          fields: [
-            {
-              id: 'field-mock-1',
-              type: 'checkpoint',
-              label: 'Vérifier les dimensions',
-              description: 'Utiliser le pied à coulisse',
-              required: true,
-            }
-          ]
-        }
-      ]
-    };
-  }
 }
 
 /**

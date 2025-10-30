@@ -13,9 +13,5 @@ export const AI_CONFIG = {
 
   get token(): string {
     return (import.meta as any).env?.VITE_AI_TOKEN || '';
-  },
-
-  get isMockEnabled(): boolean {
-    return (import.meta as any).env?.VITE_AI_MOCK === 'true';
   }
 } as const;
